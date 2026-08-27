@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-%E2%89%A53.10-blue.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Android%20%7C%20iOS-green.svg)](#supported-platforms)
 
-[**Quick Start**](docs/QuickStart.md) · [**API Reference**](docs/API.md) · [**Architecture**](docs/Architecture.md) · [**Contributing**](CONTRIBUTING.md)
+[**Quick Start**](docs/QuickStart.md) · [**API Reference**](docs/API.md) · [**Architecture**](docs/Architecture.md) · [**Contributing**](CONTRIBUTING.md) · [**DAIMAX Website**](https://www.daimax.cn/)
 
 English | [中文](README.zh-CN.md)
 
@@ -162,6 +162,8 @@ evalapp evaluate --url https://my-app.vercel.app --sample-ids CoffeeRoastLog
 
 When the run finishes, a single-file `report.html` is written to the workspace root and opened in your browser (disable with `--no-open-report`).
 
+> No app to evaluate yet? Describe your idea on [DAIMAX](https://www.daimax.cn/) and you'll have a runnable app in minutes — then point `--url` at it and see how it scores.
+
 ---
 
 ## CLI Overview
@@ -198,6 +200,14 @@ pytest
 ## Contributing
 
 Contributions of all kinds are welcome — new metrics, dataset samples, platform support, documentation, and test coverage. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, code style, and PR checklist.
+
+---
+
+## About DAIMAX
+
+daimax-appbench comes out of [DAIMAX](https://www.daimax.cn/), an AI-powered app factory: describe an app in natural language and the platform handles requirement breakdown, UI design, code generation, live preview, and iteration — delivering mini-programs, H5, and cross-platform apps.
+
+This benchmark is how we keep our own generated apps honest. If that sounds useful, come try it at [www.daimax.cn](https://www.daimax.cn/).
 
 ---
 
