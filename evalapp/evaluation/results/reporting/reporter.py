@@ -1,8 +1,12 @@
 """Reporter: 生成评测 HTML 报告（前端单文件模板 + 数据注入）。
 
-报告 UI 与 Web 控制台的评测报告页完全一致：模板 report_template.html 由
-studio/frontend 的报告页构建而来（npm run build:report-template，产物提交入库），
-本模块只负责准备报告数据 JSON 并注入模板，无任何 HTML 拼装逻辑。
+模板 report_template.html 由本仓 report-ui/ 构建而来（npm run build:template，
+产物提交入库，使用者无需 Node 环境），本模块只负责准备报告数据 JSON 并注入
+模板，无任何 HTML 拼装逻辑。
+
+本地报告是纯静态只读产物：凡是数据已在工作区内的能力（美观度 trace、执行
+总览、操作历史、用例步骤截图……）都必须在此一并注入，报告页运行时不会发起
+任何请求。
 """
 
 from __future__ import annotations
@@ -14,14 +18,13 @@ from ....utils.logging import get_logger
 from ..models import EvalRun, build_report_data
 from ..comparison.screenshot_extractor import extract_sample_screenshot
 from .dataset_catalog import build_dataset_info_for_report
-from .e2e_paths import migrate_e2e_report_paths
 from .screenshot_export import export_case_screenshots
 
 logger = get_logger(__name__)
 
-# 前端单文件模板（React 报告页构建产物，与 Web 控制台报告页同源）
+# 前端单文件模板（report-ui/ 构建产物）
 _TEMPLATE_PATH = Path(__file__).parent / "templates" / "report_template.html"
-# 模板中的数据占位（见 studio/frontend/report-standalone.html）
+# 模板中的数据占位（见 report-ui/index.html）
 _DATA_PLACEHOLDER = "null /*__REPORT_DATA_PLACEHOLDER__*/"
 
 # 截图文件名解析用平台清单（与 studio 后端 KNOWN_PLATFORMS 保持一致）
@@ -61,7 +64,7 @@ class Reporter:
 
         # 迁移旧的绝对路径 report_path 为相对路径
         if workspace_dir is not None:
-            migrate_e2e_report_paths(report_data_dict, workspace_dir)
+            _migrate_report_paths(report_data_dict, workspace_dir)
 
         return self.render_html_from_data(report_data_dict, workspace_dir=workspace_dir)
 
@@ -74,21 +77,19 @@ class Reporter:
         """把已准备好的报告数据字典注入前端模板，返回完整 HTML。
 
         report_data 结构与 Web 控制台 GET /api/workspaces/{ws}/report 的
-        data 字段一致；报告页在本地打开时没有后端可请求，因此本方法把页面
-        依赖的工作区/样本集上下文一并注入：
-        - static_workspace_id: 工作区目录名（页面标题/路由展示用）
+        data 字段一致；本方法额外注入本地报告所需的工作区数据：
+        - static_workspace_id: 工作区目录名（页面标题展示用）
         - static_screenshots: 各样本 screenshots/ 目录清单（相对路径），
           供用例详情/多端对比的截图条使用
-        - static_aesthetics_traces: 美观度 trace，按 {样本}{平台} 索引
-        - static_command_history: 工作区指令历史（列表）
-        - static_dataset_info: 报告涉及样本的样本集元数据（类别/需求/用例定义）
-
-        另外在注入前把 e2e 报告内嵌的用例步骤截图限量落盘（见 screenshot_export），
-        并在报告数据未带 execution_overview 时从工作区补齐。
+        - static_aesthetics_traces: 各样本美观度评测 trace（关键截图/五维明细）
+        - static_command_history: 工作区指令历史
+        - execution_overview: 执行总览（缺失时从工作区文件补齐）
+        - static_dataset_info: 本地 dataset/ 的样本集元数据（分组/中文名/需求/用例定义）
         """
+        report_data["static_dataset_info"] = build_dataset_info_for_report(report_data)
         if workspace_dir is not None:
             report_data.setdefault("static_workspace_id", workspace_dir.name)
-            # 必须先落盘再扫描目录，否则本次导出的步骤截图进不了截图清单
+            # 先落盘用例步骤截图，再扫描目录，两步共用同一套文件名约定
             export_case_screenshots(workspace_dir, report_data)
             report_data["static_screenshots"] = _build_static_screenshots(
                 workspace_dir, report_data,
@@ -97,14 +98,10 @@ class Reporter:
                 workspace_dir, report_data,
             )
             report_data["static_command_history"] = _load_command_history(workspace_dir)
-            # 评测流程已算过时以其为准，仅在缺失时回读工作区落盘的总览
             if not report_data.get("execution_overview"):
-                overview = _read_json(workspace_dir / "execution_overview.json")
-                if isinstance(overview, dict) and overview:
+                overview = _load_json(workspace_dir / "execution_overview.json")
+                if overview:
                     report_data["execution_overview"] = overview
-        report_data.setdefault(
-            "static_dataset_info", build_dataset_info_for_report(report_data)
-        )
         _normalize_screenshot_urls(report_data)
 
         data_json = json.dumps(report_data, ensure_ascii=True, default=str)
@@ -143,7 +140,7 @@ def _render_html_template(data_json: str) -> str:
     if _DATA_PLACEHOLDER not in template:
         raise RuntimeError(
             f"报告模板缺少数据占位符 {_DATA_PLACEHOLDER!r}: {_TEMPLATE_PATH}"
-            "（模板需由 studio/frontend 执行 npm run build:report-template 重新生成）"
+            "（模板需在 report-ui/ 执行 npm run build:template 重新生成）"
         )
     return template.replace(_DATA_PLACEHOLDER, data_json, 1)
 
@@ -167,47 +164,6 @@ def _truncate_case_details(report_data_dict: dict) -> None:
                 if len(detail) > 200:
                     detail = detail[:200] + "..."
                 case["details"] = detail
-
-
-def _read_json(path: Path):
-    """读取 JSON 文件，不存在或内容损坏时返回 None（报告生成不因此中断）。"""
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as e:
-        logger.debug("读取 %s 失败: %s", path, e)
-        return None
-
-
-def _build_aesthetics_traces(workspace_dir: Path, report_data: dict) -> dict:
-    """收集各样本各平台的美观度 trace（``{sample}/aesthetics_trace_{platform}.json``）。
-
-    报告页的美观度明细面板按 {样本}{平台} 两级索引，缺文件的组合直接不出现。
-    """
-    traces: dict[str, dict[str, dict]] = {}
-    for sr in report_data.get("sample_results", []):
-        sample_id = sr.get("sample_id", "")
-        platform = sr.get("platform", "")
-        if not sample_id or not platform:
-            continue
-        trace = _read_json(
-            workspace_dir / sample_id / f"aesthetics_trace_{platform}.json"
-        )
-        if isinstance(trace, dict):
-            traces.setdefault(sample_id, {})[platform] = trace
-    return traces
-
-
-def _load_command_history(workspace_dir: Path) -> list[dict]:
-    """读取工作区指令历史，返回报告页直接消费的列表形态。
-
-    这里直读文件而不走 workspace.command_history.list_commands：报告生成对
-    工作区应是只读的，不需要为读取加锁，也不应触发损坏文件的备份改名。
-    """
-    from ....workspace.command_history import COMMAND_HISTORY_FILE
-
-    data = _read_json(workspace_dir / COMMAND_HISTORY_FILE)
-    commands = data.get("commands") if isinstance(data, dict) else None
-    return commands if isinstance(commands, list) else []
 
 
 def _normalize_screenshot_urls(report_data: dict) -> None:
@@ -238,9 +194,9 @@ def _normalize_screenshot_urls(report_data: dict) -> None:
 def _build_static_screenshots(workspace_dir: Path, report_data: dict) -> dict:
     """扫描各样本 screenshots/ 目录，生成静态报告用截图清单。
 
-    与 studio 后端 GET /samples/{id}/screenshots 的解析规则一致：
+    与 static_screenshots 的文件名约定一致：
     - launch_{platform}.png → TC_LAUNCH 截图
-    - {platform}_{tc_id}_step_{n}.png → 用例步骤截图
+    - {platform}_{tc_id}_step_{n}.png → 用例步骤截图（由 screenshot_export 落盘）
     url 为相对于工作区根目录（即 report.html 所在目录）的路径。
     """
     manifest: dict[str, list[dict]] = {}
@@ -282,3 +238,52 @@ def _build_static_screenshots(workspace_dir: Path, report_data: dict) -> dict:
         if entries:
             manifest[sample_id] = entries
     return manifest
+
+
+def _load_json(path: Path):
+    """读取工作区 JSON 文件，缺失或损坏时返回 None（不阻断报告生成）。"""
+    if not path.is_file():
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError) as e:
+        logger.debug("读取 %s 失败: %s", path, e)
+        return None
+
+
+def _build_aesthetics_traces(workspace_dir: Path, report_data: dict) -> dict:
+    """收集各样本各平台的美观度 trace（{sample: {platform: trace}}）。
+
+    trace 体积很小（数十 KB 量级），随报告内联后“查看详情”里的关键截图与
+    五维明细无需后端接口即可展示。
+    """
+    traces: dict[str, dict] = {}
+    for sr in report_data.get("sample_results", []):
+        sample_id = sr.get("sample_id", "")
+        platform = sr.get("platform", "")
+        if not sample_id or not platform:
+            continue
+        if traces.get(sample_id, {}).get(platform) is not None:
+            continue
+        trace = _load_json(workspace_dir / sample_id / f"aesthetics_trace_{platform}.json")
+        if trace:
+            traces.setdefault(sample_id, {})[platform] = trace
+    return traces
+
+
+def _load_command_history(workspace_dir: Path) -> list[dict]:
+    """读取工作区指令历史，供报告页“操作历史”展示。"""
+    data = _load_json(workspace_dir / "command_history.json")
+    if isinstance(data, dict):
+        commands = data.get("commands")
+    else:
+        commands = data
+    return commands if isinstance(commands, list) else []
+
+
+def _migrate_report_paths(report_data_dict: dict, workspace_dir: Path) -> None:
+    """迁移旧的绝对路径 report_path 为工作区相对路径。"""
+    from .e2e_paths import migrate_e2e_report_paths
+
+    migrate_e2e_report_paths(report_data_dict, workspace_dir)

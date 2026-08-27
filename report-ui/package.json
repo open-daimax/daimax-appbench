@@ -22,5 +22,5 @@
     "vite": "^5.0.8",
     "vite-plugin-singlefile": "^2.3.3"
   },
-  "repository": ""
+  "repository": "https://github.com/open-daima/daimax-appbench.git"
 }

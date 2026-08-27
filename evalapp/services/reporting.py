@@ -19,6 +19,28 @@ from ..workspace._safe_io import atomic_write_json
 
 logger = get_logger(__name__)
 
+# 美观度字段：在评分阶段才产出，需回写到 report_data 行供 HTML 报告渲染
+_AESTHETICS_REPORT_KEYS = (
+    "aesthetics_score", "aesthetics_reason", "aesthetics_issues",
+    "aesthetics_dimensions", "aesthetics_rule_version",
+    "aesthetics_scored_frames",
+)
+
+
+def _sync_aesthetics_to_row(sr: dict, plat_scores: dict) -> None:
+    """将平台评分中的美观度字段回写到 report_data 的样本行。
+
+    build_report_data() 构建 sample_results 时美观度尚未评分，而前端读取的是
+    sample_results[*].aesthetics_*，故在写入 scores.json 的同时回填一份。
+    源侧为空时不覆盖行上已有的值（report 阶段行上可能已由聚合器填好）。
+    """
+    for key in _AESTHETICS_REPORT_KEYS:
+        value = plat_scores.get(key)
+        if value in (None, "", [], {}):
+            sr.setdefault(key, value)
+        else:
+            sr[key] = value
+
 
 class ReportService:
     """Report generation service.
@@ -200,6 +222,7 @@ class ReportService:
                 "aesthetics_scored_frames": aesthetics_data["aesthetics_scored_frames"] if aesthetics_data else existing_platform.get("aesthetics_scored_frames", []),
             }
             write_scores(self.workspace, sample_id, scores)
+            _sync_aesthetics_to_row(sr, scores["platforms"][platform])
 
             # 跟踪已处理的样本
             if sample_id not in seen_samples:
@@ -389,6 +412,7 @@ class ReportService:
                 "aesthetics_scored_frames": aes_result.scored_frames if aes_result else existing_platform.get("aesthetics_scored_frames", []),
             }
             write_scores(self.workspace, sample_id, scores)
+            _sync_aesthetics_to_row(sr, scores["platforms"][platform])
 
             if sample_id not in seen_samples:
                 seen_samples[sample_id] = {"sample_id": sample_id, "platforms": [], "scores_path": f"{sample_id}/scores.json"}

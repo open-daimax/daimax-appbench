@@ -116,7 +116,7 @@ evalapp evaluate --apk ./build/app-debug.apk --sample-ids CoffeeRoastLog
 ### 从源码构建并评测
 
 ```bash
-evalapp evaluate --project ./my-expo-app --platform web --sample-ids CoffeeRoastLog
+evalapp evaluate --project ./my-app --platform web --sample-ids CoffeeRoastLog
 ```
 
 使用 `--project` 时必须显式指定 `--platform`，引擎会先构建项目再进行评测。

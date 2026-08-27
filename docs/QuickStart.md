@@ -116,7 +116,7 @@ evalapp evaluate --apk ./build/app-debug.apk --sample-ids CoffeeRoastLog
 ### Evaluate from Source Code
 
 ```bash
-evalapp evaluate --project ./my-expo-app --platform web --sample-ids CoffeeRoastLog
+evalapp evaluate --project ./my-app --platform web --sample-ids CoffeeRoastLog
 ```
 
 When using `--project`, you must specify `--platform` explicitly. The engine will build the project before evaluation.
