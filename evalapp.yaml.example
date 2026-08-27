@@ -1,0 +1,94 @@
+# EvalApp 配置示例
+# 使用方法：复制为 evalapp.yaml 后按注释填写。
+#   cp evalapp.yaml.example evalapp.yaml
+# 注意：evalapp.yaml 包含密钥等敏感信息，已被 .gitignore 忽略，请勿提交。
+
+# 评测目标平台（按需增减）
+platforms: [android, ios]
+results_dir: results
+
+# 统一模型配置表（按用途槽位）
+# - e2e:        Midscene E2E UI 测试视觉模型
+# - aesthetics: 美观度 VL 评分模型
+# 优先级：evalapp.yaml 显式配置 > 环境变量 > 硬编码默认值（见 config.py）
+models:
+  e2e:
+    api_key: ""                     # Midscene 视觉模型 API Key（环境变量 MIDSCENE_MODEL_API_KEY 可覆盖）
+    base_url: ""                    # OpenAI 兼容协议地址（环境变量 MIDSCENE_MODEL_BASE_URL 可覆盖）
+    name: ""                        # 模型名称，如 gpt-4o（环境变量 MIDSCENE_MODEL_NAME 可覆盖）
+    family: ""                      # 模型系列标识（环境变量 MIDSCENE_MODEL_FAMILY 可覆盖）
+  aesthetics:
+    api_key: ""                     # 美观度 VL 评分 API Key（环境变量 DASHSCOPE_API_KEY 可覆盖）
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"  # 默认 DashScope
+    name: "qwen-vl-max"             # 默认 qwen-vl-max（环境变量 AESTHETICS_MODEL 可覆盖）
+    family: ""                      # 预留
+
+# Codex CLI 应用生成器（可选）
+# 推荐只在此声明 URL/MODEL，KEY 通过 CODEX_API_KEY 环境变量提供。
+codex_generator:
+  cli_path: codex
+  workspace_root: ~/codex_projects
+  timeout: 3600
+  model: ""
+  base_url: ""
+  api_key_env: CODEX_API_KEY
+  sandbox: workspace-write
+  system_prompt: ""
+
+# AI UI 测试配置
+ai_ui_test:
+  # script_dir 默认使用内置工具 (tools/ai-ui-test/)，无需配置
+  timeout: 300
+  replan_limit: 20
+
+# 应用构建配置
+build_app:
+  script_path: tools/build_app/scripts/build_app.py
+  timeout: 1800
+  build_type: debug
+  clean: false
+  android_output_format: apk
+  ios_output_format: app
+
+# 应用安装配置
+install_app:
+  script_path: tools/install_app/scripts/install_app.py
+  timeout: 300
+  device_id: null
+  auto_install: false
+
+# 外部模型服务配置（可选，用于增强评测能力）
+# 默认关闭；启用后需填写 api_key，未配置时自动回退到内置工具
+external_service:
+  enabled: false
+  api_key: ""                       # 外部服务 API Key（环境变量 EXTERNAL_SERVICE_API_KEY 可覆盖）
+
+# MCP (Model Context Protocol) 工具服务配置（可选）
+# 默认关闭；启用后可注册外部 MCP 服务端点供评测使用，详见 references/MCP_TOOLS_REFERENCE.md
+mcp:
+  enabled: false
+  servers: []                      # MCP 服务端列表，示例见参考文档
+  # servers:
+  #   - name: filesystem
+  #     command: npx
+  #     args: ["-y", "@anthropic/mcp-server-filesystem", "/tmp/workspace"]
+  #   - name: remote-api
+  #     url: http://localhost:8080/mcp
+
+# 评测报告配置
+report:
+  auto_open: true       # 生成报告后自动在浏览器中打开
+  eval_version: "2.0"   # 评测版本号
+
+# ── 通用运行时配置 ──
+# 被测应用运行时经 console.error 上报的 source 标识；空则不采集运行时错误
+# 示例：如被测应用壳工程上报 source 为 "my-app-h5"，则填 "my-app-h5"
+runtime_error_source: ""
+
+# 扫描/聚合产物时需排除的工作区子目录名；空则不额外排除
+# 示例：若生成器产物目录为 .my-gen，可配置 [".my-gen"]
+excluded_workspace_dirs: []
+
+# 需要运行 SampleAnalyzer.summarize 的生成器名单；空则都不运行
+# 示例：["my-generator"]
+sample_analysis_generators: []

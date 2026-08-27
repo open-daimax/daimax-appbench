@@ -1,0 +1,443 @@
+{
+  "prompt_id": "SeedLibrary",
+  "platform": "default",
+  "dataset_version": "v2",
+  "test_cases": [
+    {
+      "id": "TC001",
+      "name": "用户注册",
+      "description": "验证新用户注册流程",
+      "steps": [
+        "打开应用，进入登录/注册页面 -> 预期: 显示登录和注册入口",
+        "点击注册入口，使用邮箱123@qq.com密码12345678注册 -> 预期: 注册成功（若已注册则提示已存在）",
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功",
+        "验证登录结果 -> 预期: 进入种子库主页"
+      ],
+      "expected_result": "用户成功注册并登录，进入种子库主页",
+      "priority": "P0",
+      "category": "form_validation",
+      "functional_dimension": "authentication",
+      "page_level": "L3",
+      "related_page": "登录/注册页"
+    },
+    {
+      "id": "TC002",
+      "name": "入库种子完整流程",
+      "description": "验证填写种子信息保存后出现在种子库列表",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击右上角'+'按钮 -> 预期: 进入入库种子页面",
+        "填写品种名称、选择类别、填写来源、输入数量等表单信息 -> 预期: 表单填入完成",
+        "点击保存 -> 预期: 保存成功，返回种子库页，新入库种子出现在列表中"
+      ],
+      "expected_result": "种子入库成功并显示在种子库列表中",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "入库种子"
+    },
+    {
+      "id": "TC003",
+      "name": "入库种子后库存数量验证",
+      "description": "验证入库种子后详情页库存数量正确显示",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击'+'进入入库页 -> 预期: 显示入库表单",
+        "填写品种名称和入库数量等表单信息并保存 -> 预期: 种子入库成功",
+        "点击该种子进入详情页 -> 预期: 库存数量与入库时填写的数量一致"
+      ],
+      "expected_result": "种子详情页库存数量与入库数量一致",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "入库种子"
+    },
+    {
+      "id": "TC004",
+      "name": "登记借出种子",
+      "description": "验证登记借出流程正常完成",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击'+'入库一种子，填写品种名称和数量并保存 -> 预期: 种子入库成功",
+        "在借出管理Tab点击'+'进入登记借出页，选择刚入库的种子 -> 预期: 种子选择成功",
+        "填写借出人姓名和借出数量，选择借出日期，点击保存 -> 预期: 借出登记成功"
+      ],
+      "expected_result": "借出登记成功保存",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "登记借出"
+    },
+    {
+      "id": "TC005",
+      "name": "借出后库存联动验证",
+      "description": "验证借出后库存自动减少对应数量",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击'+'入库一种子，填写品种名称和较大数量并保存 -> 预期: 种子入库成功",
+        "在借出管理Tab点击'+'登记借出该种子，填写借出人和数量并保存 -> 预期: 借出登记成功",
+        "进入该种子详情页查看库存信息 -> 预期: 当前库存已减少借出数量，已借出数量相应增加"
+      ],
+      "expected_result": "库存自动减少借出数量，已借出数量相应增加",
+      "priority": "P0",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L2",
+      "related_page": "种子详情"
+    },
+    {
+      "id": "TC006",
+      "name": "借出状态流转",
+      "description": "验证借出记录状态流转（已借出→种植中→已归还）及归还后库存恢复",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在借出管理Tab点击'+'登记一条借出记录并保存 -> 预期: 借出记录创建成功，状态为已借出",
+        "点击该借出记录进入详情页 -> 预期: 显示借出详情，状态为已借出",
+        "点击状态流转按钮将状态改为'种植中' -> 预期: 状态更新为种植中",
+        "再将状态流转为'已归还' -> 预期: 状态更新为已归还，种子库存恢复"
+      ],
+      "expected_result": "借出状态正确流转，归还后库存恢复",
+      "priority": "P0",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L2",
+      "related_page": "借出详情"
+    },
+    {
+      "id": "TC007",
+      "name": "种子库搜索",
+      "description": "验证在种子库页通过品种名称搜索",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页顶部搜索栏输入某品种名 -> 预期: 实时显示匹配结果",
+        "查看搜索结果 -> 预期: 仅显示名称匹配的种子",
+        "清空搜索 -> 预期: 恢复显示全部种子"
+      ],
+      "expected_result": "搜索功能正常，能按品种名称过滤种子列表",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "种子库"
+    },
+    {
+      "id": "TC008",
+      "name": "种子库分类筛选",
+      "description": "验证在种子库页按类别筛选种子",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击分类筛选 -> 预期: 显示类别选项",
+        "选择某一类别 -> 预期: 仅显示该类别的种子",
+        "切换为全部 -> 预期: 恢复显示所有类别种子"
+      ],
+      "expected_result": "种子库按类别筛选功能正常",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "种子库"
+    },
+    {
+      "id": "TC009",
+      "name": "借出管理按状态筛选",
+      "description": "验证在借出管理页按状态筛选记录",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在借出管理Tab点击'+'登记一条借出记录并保存 -> 预期: 借出记录创建成功",
+        "在借出管理页选择按状态筛选'已借出' -> 预期: 仅显示已借出状态的记录",
+        "切换为全部 -> 预期: 恢复显示所有状态的记录"
+      ],
+      "expected_result": "借出管理按状态筛选功能正常",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "借出管理"
+    },
+    {
+      "id": "TC010",
+      "name": "编辑种子信息",
+      "description": "验证在种子详情页编辑种子基本信息",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击某种子进入详情页 -> 预期: 显示种子详情",
+        "点击编辑按钮 -> 预期: 进入编辑页面，表单预填原有信息",
+        "修改来源信息 -> 预期: 来源正确修改",
+        "点击保存 -> 预期: 保存成功，详情页显示更新后的来源信息"
+      ],
+      "expected_result": "种子信息编辑成功，详情页显示更新内容",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "种子详情"
+    },
+    {
+      "id": "TC011",
+      "name": "删除种子",
+      "description": "验证删除种子后从列表移除",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击'+'入库一种子并保存 -> 预期: 种子入库成功",
+        "点击该种子进入详情页 -> 预期: 显示种子详情",
+        "点击删除按钮并确认删除 -> 预期: 删除成功，返回种子库页",
+        "查看种子库列表 -> 预期: 该种子已从列表中移除"
+      ],
+      "expected_result": "种子删除成功，从列表中消失",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "种子详情"
+    },
+    {
+      "id": "TC012",
+      "name": "库存状态标签验证",
+      "description": "验证种子库存不同数量时状态标签正确切换（充足/紧缺/无库存）",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "入库一种子，数量设为20并保存 -> 预期: 种子卡片状态标签显示'充足'",
+        "登记借出该种子15个数量 -> 预期: 种子卡片状态标签变为'紧缺'",
+        "再次登记借出该种子剩余全部数量 -> 预期: 种子卡片状态标签变为'无库存'"
+      ],
+      "expected_result": "库存状态标签根据数量正确显示（充足≥10/紧缺1-9/无库存=0）",
+      "priority": "P1",
+      "category": "boundary_exception",
+      "functional_dimension": "state_management",
+      "page_level": "L1",
+      "related_page": "种子库"
+    },
+    {
+      "id": "TC013",
+      "name": "种子数据持久化验证",
+      "description": "验证入库种子后切换Tab再返回，数据仍然存在",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页入库一种子并保存 -> 预期: 入库成功，种子出现在列表中",
+        "切换到借出管理Tab -> 预期: 进入借出管理页",
+        "切换回种子库Tab -> 预期: 之前入库的种子仍显示在列表中，数据完整保留"
+      ],
+      "expected_result": "切换Tab后返回种子库，之前入库的数据完整保留",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "data_persistence",
+      "page_level": "L1",
+      "related_page": "种子库"
+    },
+    {
+      "id": "TC014a",
+      "name": "编辑种子信息并验证修改生效",
+      "description": "验证种子创建后编辑信息修改生效",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击'+'入库一种子，填写品种名称和来源并保存 -> 预期: 种子入库成功",
+        "点击该种子进入详情页，点击编辑按钮 -> 预期: 进入编辑页，表单预填原有信息",
+        "修改来源字段并保存 -> 预期: 保存成功",
+        "查看种子详情页来源字段 -> 预期: 显示修改后的来源信息"
+      ],
+      "expected_result": "种子编辑后详情页显示更新后的来源信息",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "种子详情"
+    },
+    {
+      "id": "TC014b",
+      "name": "删除种子并验证列表移除",
+      "description": "验证种子创建后删除成功并从列表移除",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击'+'入库一种子并保存 -> 预期: 种子出现在列表中",
+        "点击该种子进入详情页，点击删除按钮并确认 -> 预期: 删除成功，返回种子库页",
+        "在种子库列表中查找该种子 -> 预期: 该种子已不存在于列表中"
+      ],
+      "expected_result": "种子删除后从列表中消失",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "种子详情"
+    },
+    {
+      "id": "TC015",
+      "name": "搜索精确匹配验证",
+      "description": "验证搜索结果仅包含匹配项，不包含无关种子",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库顶部搜索栏输入某关键词 -> 预期: 列表显示名称匹配的种子",
+        "检查搜索结果 -> 预期: 结果仅包含匹配项，名称不匹配的种子不出现",
+        "清空搜索，输入另一不同关键词 -> 预期: 仅显示新关键词的匹配结果"
+      ],
+      "expected_result": "搜索结果精准匹配，不包含无关种子",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "种子库"
+    },
+    {
+      "id": "TC016a",
+      "name": "借出后库存减少验证",
+      "description": "验证借出后种子库存精确减少",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页入库一种子并保存 -> 预期: 种子入库成功",
+        "进入该种子详情页记录当前库存数量 -> 预期: 显示库存信息",
+        "在借出管理Tab登记借出该种子一定数量并保存 -> 预期: 借出登记成功",
+        "返回该种子详情页查看库存 -> 预期: 当前库存减少借出数量，已借出数量相应增加"
+      ],
+      "expected_result": "借出后库存精确减少，已借出数量相应增加",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L2",
+      "related_page": "种子详情"
+    },
+    {
+      "id": "TC016b",
+      "name": "归还后库存恢复验证",
+      "description": "验证借出记录归还后种子库存精确恢复",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "进入该种子详情页记录当前库存和已借出数量 -> 预期: 显示库存信息",
+        "在借出管理页点击一条已借出记录进入详情 -> 预期: 显示借出详情",
+        "将状态流转至'已归还' -> 预期: 状态变为已归还",
+        "返回该种子详情页查看库存 -> 预期: 已借出数量减少，库存相应恢复"
+      ],
+      "expected_result": "归还后库存精确恢复，已借出数量减少",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L2",
+      "related_page": "借出详情"
+    },
+    {
+      "id": "TC017",
+      "name": "入库种子表单必填校验",
+      "description": "验证品种名称为空时提交应被阻止并提示错误",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页点击'+'进入入库页 -> 预期: 显示空白表单",
+        "不填写品种名称，填写其他字段后点击保存 -> 预期: 保存被阻止，显示品种名称必填错误提示",
+        "填写品种名称后再次保存 -> 预期: 保存成功"
+      ],
+      "expected_result": "品种名称为空时保存被阻止并显示必填校验错误，填写后可正常保存",
+      "priority": "P1",
+      "category": "form_validation",
+      "functional_dimension": "form_validation",
+      "page_level": "L3",
+      "related_page": "入库种子"
+    },
+    {
+      "id": "TC018",
+      "name": "个人统计数据准确性验证",
+      "description": "验证我的页面统计数据随操作正确更新",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "切换到我的Tab记录当前统计数据 -> 预期: 显示种子品种数和借出总次数",
+        "在种子库页入库一种新种子 -> 预期: 种子入库成功",
+        "在借出管理Tab登记一条借出记录 -> 预期: 借出登记成功",
+        "返回我的Tab查看统计 -> 预期: 种子品种数和借出总次数各增加1"
+      ],
+      "expected_result": "新增种子和借出后统计数据正确更新",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L1",
+      "related_page": "我的"
+    },
+    {
+      "id": "TC019",
+      "name": "借出数量超限校验",
+      "description": "验证借出数量超过当前库存时应被阻止",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页入库一种子，数量设为较小值并保存 -> 预期: 入库成功",
+        "在借出管理页点击'+'进入登记借出页，选择该种子 -> 预期: 显示借出表单",
+        "输入超过库存的借出数量并点击保存 -> 预期: 保存被阻止，提示借出数量不可超过库存"
+      ],
+      "expected_result": "借出数量超过库存时保存被阻止并显示超限提示",
+      "priority": "P1",
+      "category": "boundary_exception",
+      "functional_dimension": "form_validation",
+      "page_level": "L3",
+      "related_page": "登记借出"
+    },
+    {
+      "id": "TC020",
+      "name": "记录收获并验证列表同步",
+      "description": "验证新增收获记录后收获列表立即显示新记录",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "进入我的页，点击收获记录入口进入收获记录页 -> 预期: 显示收获记录列表",
+        "点击右上角'+'进入记录收获页 -> 预期: 显示收获记录表单",
+        "选择关联品种，输入收获量，选择日期并保存 -> 预期: 保存成功",
+        "查看收获记录列表 -> 预期: 新增的收获记录出现在列表中"
+      ],
+      "expected_result": "新增收获记录后立即出现在收获列表中",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "记录收获"
+    },
+    {
+      "id": "TC021",
+      "name": "种子详情编辑类别后筛选结果同步",
+      "description": "验证在种子详情页修改种子类别后，返回种子库按新类别筛选能找到该种子",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页入库一种子，类别选择'草本'并保存 -> 预期: 种子入库成功",
+        "在种子库按'花卉'类别筛选 -> 预期: 该种子不在花卉筛选结果中",
+        "点击该种子进入详情页，编辑类别为'花卉'并保存 -> 预期: 类别修改成功",
+        "返回种子库分别按'花卉'和'草本'筛选 -> 预期: 花卉筛选结果中包含该种子，草本筛选结果中不包含"
+      ],
+      "expected_result": "修改类别后按新类别筛选可找到该种子，按旧类别筛选不再包含",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "cross_page_sync",
+      "page_level": "L2->L1",
+      "related_page": "种子详情"
+    },
+    {
+      "id": "TC022",
+      "name": "发布分享后社区动态列表同步",
+      "description": "验证发布分享后社区列表出现新动态",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "切换到社区Tab -> 预期: 显示社区动态列表",
+        "点击右上角'+'进入发布分享页 -> 预期: 显示发布表单",
+        "输入标题和正文内容，点击发布 -> 预期: 发布成功",
+        "查看社区动态列表 -> 预期: 新发布的动态出现在列表中"
+      ],
+      "expected_result": "发布分享后新动态立即出现在社区列表中",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "cross_page_sync",
+      "page_level": "L3->L1",
+      "related_page": "发布分享"
+    },
+    {
+      "id": "TC023",
+      "name": "借出详情状态变更后父页面筛选同步",
+      "description": "验证在借出详情将状态改为'种植中'后，返回借出管理按'种植中'筛选能找到该记录",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "在种子库页入库一种子并保存 -> 预期: 种子入库成功",
+        "在借出管理Tab登记借出该种子并保存 -> 预期: 借出记录创建成功",
+        "点击该借出记录进入详情，将状态流转为'种植中' -> 预期: 状态更新成功",
+        "返回借出管理页按'种植中'筛选 -> 预期: 该记录出现在筛选结果中"
+      ],
+      "expected_result": "借出详情状态变更后借出管理列表按新状态筛选可立即找到",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "cross_page_sync",
+      "page_level": "L2->L1",
+      "related_page": "借出详情"
+    }
+  ]
+}

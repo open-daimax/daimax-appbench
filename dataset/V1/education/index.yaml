@@ -1,0 +1,33 @@
+version: "1.0"
+name: "教育类应用评测样本集"
+description: |
+  教育类应用评测样本集,专注于评估AI生成教育学习类应用的能力。
+  覆盖单词记忆、在线课程、答题测验等教育场景。
+  用于评测学习内容展示、答题逻辑、进度追踪等专项能力。
+
+# 样本文件索引
+samples_index:
+  - dir: FlashCards
+    sample_id: FlashCards
+    title: 单词闪卡
+    app_category: 语言学习
+    dataset_version: "v2"
+    status: active
+
+  - dir: OnlineCourse
+    sample_id: OnlineCourse
+    title: 在线课程
+    app_category: 在线教育
+    dataset_version: "v1"
+    status: active
+
+  - dir: QuizApp
+    sample_id: QuizApp
+    title: 答题测验
+    app_category: 知识测验
+    dataset_version: "v2"
+    status: active
+
+# 版本信息
+created_at: "2026-05-11"
+status: active

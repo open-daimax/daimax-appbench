@@ -1,0 +1,75 @@
+version: "1.0"
+name: "单机游戏评测样本集"
+description: |
+  游戏评测样本集,专注于评估AI生成游戏类应用的能力。
+  覆盖休闲消除、跑酷、益智、数字、射击、互动、棋类等多个游戏子类。
+  用于评测游戏逻辑实现、动画系统、关卡设计、实时互动等专项能力。
+
+# 样本文件索引
+samples_index:
+  - dir: HappyMatch
+    sample_id: HappyMatch
+    title: 开心消消乐
+    game_category: 消除类
+    dataset_version: "v2"
+    status: active
+
+  - dir: SubwaySurfers
+    sample_id: SubwaySurfers
+    title: 地铁跑酷
+    game_category: 跑酷类
+    dataset_version: "v1"
+    status: deprecated
+    deprecated_reason: "复杂连续手势(实时滑动操控)，自动化测试无法模拟"
+
+  - dir: Tetris
+    sample_id: Tetris
+    title: 俄罗斯方块
+    game_category: 益智类
+    dataset_version: "v2"
+    status: deprecated
+    deprecated_reason: "实时动态游戏，方块持续自动下落，E2E截图断言不可靠"
+
+  - dir: Snake
+    sample_id: Snake
+    title: 贪吃蛇
+    game_category: 经典类
+    dataset_version: "v2"
+    status: deprecated
+    deprecated_reason: "实时动态游戏，蛇持续移动，E2E截图断言不可靠"
+
+  - dir: Game2048
+    sample_id: Game2048
+    title: "2048"
+    game_category: 数字益智类
+    dataset_version: "v2"
+    status: active
+
+  - dir: AircraftWar
+    sample_id: AircraftWar
+    title: 飞机大战
+    game_category: 射击类
+    dataset_version: "v1"
+    status: deprecated
+    deprecated_reason: "实时动态游戏，背景滚动敌机持续出现，E2E截图断言不可靠"
+
+  - dir: DrawGuess
+    sample_id: DrawGuess
+    title: 你画我猜
+    game_category: 互动类
+    dataset_version: "v1"
+    status: deprecated
+    deprecated_reason: "对战类，需多人实时协同"
+
+  - dir: Gomoku
+    sample_id: Gomoku
+    title: 五子棋
+    game_category: 棋类
+    dataset_version: "v1"
+    status: deprecated
+    deprecated_reason: "对战类，需多人实时协同"
+
+# 版本信息
+created_at: "2026-04-30"
+updated_at: "2026-06-12"
+status: active

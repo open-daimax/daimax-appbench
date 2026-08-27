@@ -1,0 +1,22 @@
+version: "1.0"
+name: "V1 基线回归样本集"
+description: "包含历史全量样本，仅执行 P0 用例用于快速回归验证"
+execution_policy:
+  priority_filter: ["P0"]
+  skip_deprecated: true
+categories:
+  - tools
+  - social
+  - ecommerce
+  - education
+  - lifestyle
+  - games
+  - finance
+  - health
+  - dining
+  - media
+total_samples: 51
+active_samples: 41
+deprecated_samples: 10
+created_at: "2026-07-15"
+status: active

@@ -1,0 +1,33 @@
+version: "1.0"
+name: "电商类应用评测样本集"
+description: |
+  电商类应用评测样本集,专注于评估AI生成电商购物类应用的能力。
+  覆盖综合购物、限时秒杀、二手交易等电商场景。
+  用于评测商品展示、购物车、下单结算、支付流程等专项能力。
+
+# 样本文件索引
+samples_index:
+  - dir: ShoppingApp
+    sample_id: ShoppingApp
+    title: 综合购物
+    app_category: 电商购物
+    dataset_version: "v1"
+    status: active
+
+  - dir: FlashSale
+    sample_id: FlashSale
+    title: 限时秒杀
+    app_category: 促销电商
+    dataset_version: "v1"
+    status: active
+
+  - dir: SecondHand
+    sample_id: SecondHand
+    title: 二手交易
+    app_category: 二手市场
+    dataset_version: "v2"
+    status: active
+
+# 版本信息
+created_at: "2026-05-11"
+status: active

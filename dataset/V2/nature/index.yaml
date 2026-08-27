@@ -1,0 +1,12 @@
+version: '1.0'
+name: 自然观察
+description: 面向自然爱好者的观察与记录应用
+dataset_version: V2
+status: active
+created_at: '2026-07-15'
+samples_index:
+- AquariumManager
+- BirdWatching
+- PlantDiary
+- ReptileCare
+- SeedLibrary

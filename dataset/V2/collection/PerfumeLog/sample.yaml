@@ -1,0 +1,129 @@
+version: "2.0"
+sample_id: "PerfumeLog"
+title: "香水品鉴收藏"
+app_type: 收藏
+dataset_version: "V2"
+complexity: high
+requires_backend: false
+requires_auth: false
+
+requirement: |
+  实现一个香水品鉴收藏应用，帮助香水爱好者管理个人香水库、记录品鉴心得、进行对比评测和获取季节推荐：
+
+  【香氛库】
+  1. 展示用户收藏的香水列表，每瓶显示名称、品牌、香调分类、评分和瓶身缩略图
+  2. 支持按品牌/香调/评分排序
+  3. 点击进入香水详情页，显示前调/中调/后调、留香时长、适用场景和个人心得
+
+  【香调图谱】
+  4. 以分类视图展示所有香调类型（花香调/木质调/东方调/清新调/馥奇香调等）
+  5. 每个分类显示包含的香水数量
+  6. 点击进入该香调下的香水列表
+
+  【对比评测】
+  7. 支持选择2-3瓶香水进行对比
+  8. 对比维度包含：价格、留香时长、扩散度、适用季节、评分
+  9. 生成可视化对比图表
+  10. 支持保存对比结果到历史记录
+
+  【季节推荐】
+  11. 根据当前季节推荐适合的香水
+  12. 按季节标签（春/夏/秋/冬）分类展示
+  13. 每个推荐显示推荐理由和适用场景
+
+  【我的】
+  14. 个人收藏统计（总数/各香调占比）
+  15. 使用心得列表
+  16. 对比历史记录
+  17. 收藏夹管理
+
+pages:
+  - name: "香氛库"
+    level: L1
+    description: "个人香水收藏列表，支持排序和浏览"
+
+  - name: "香调图谱"
+    level: L1
+    description: "按香调类型分类展示，可视化图谱"
+
+  - name: "对比评测"
+    level: L1
+    description: "选择香水进行多维度对比"
+
+  - name: "季节推荐"
+    level: L1
+    description: "按季节推荐适合的香水"
+
+  - name: "我的"
+    level: L1
+    description: "个人统计、心得列表和收藏管理"
+
+  - name: "香水详情"
+    level: L2
+    description: "香水完整信息、香调层次和个人心得"
+    entry_from: "香氛库"
+
+  - name: "香调分类列表"
+    level: L2
+    description: "某个香调类型下的所有香水"
+    entry_from: "香调图谱"
+
+  - name: "对比结果"
+    level: L2
+    description: "对比图表和详细维度对照"
+    entry_from: "对比评测"
+
+  - name: "品牌详情"
+    level: L2
+    description: "某品牌下的所有香水和品牌介绍"
+    entry_from: "香氛库"
+
+  - name: "收藏列表"
+    level: L2
+    description: "收藏夹内的香水列表"
+    entry_from: "我的"
+
+  - name: "添加香水记录"
+    level: L3
+    description: "录入新香水信息表单"
+    entry_from: "香氛库"
+
+  - name: "创建对比"
+    level: L3
+    description: "选择香水创建对比评测"
+    entry_from: "对比评测"
+
+  - name: "编辑评分"
+    level: L3
+    description: "修改香水评分和心得"
+    entry_from: "香水详情"
+
+  - name: "写使用心得"
+    level: L3
+    description: "为某瓶香水撰写使用心得"
+    entry_from: "香水详情"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - { name: "香氛库", icon: "flask", page: "香氛库" }
+    - { name: "香调", icon: "layers", page: "香调图谱" }
+    - { name: "对比", icon: "bar-chart-2", page: "对比评测" }
+    - { name: "推荐", icon: "sun", page: "季节推荐" }
+    - { name: "我的", icon: "user", page: "我的" }
+
+core_functions:
+  - 香水收藏CRUD与排序
+  - 香调分类与图谱展示
+  - 多瓶香水对比评测
+  - 季节推荐与场景标签
+  - 使用心得记录
+  - 收藏统计可视化
+
+constraints:
+  - 无后端，所有数据存储在本地（AsyncStorage/localStorage）
+  - 系统预置10瓶香水数据供展示（覆盖不同香调和品牌）
+  - 对比最多支持3瓶香水同时对比
+  - 季节推荐基于香水的季节标签静态匹配
+
+notes: "E2E测试重点：录入香水→选香调分类→创建对比评测→记录使用心得→季节推荐的完整业务闭环"

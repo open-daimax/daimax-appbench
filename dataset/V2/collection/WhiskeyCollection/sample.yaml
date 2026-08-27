@@ -1,0 +1,122 @@
+version: "2.0"
+sample_id: WhiskeyCollection
+title: 威士忌收藏鉴赏
+app_type: 收藏鉴赏
+dataset_version: "V2"
+complexity: high
+requires_backend: true
+requires_auth: true
+
+requirement: |
+  实现一个威士忌收藏鉴赏应用，面向威士忌爱好者提供酒款档案管理、品鉴笔记记录、风味轮盘对比和品鉴会组织功能：
+
+  【我的酒柜】
+  酒柜首页以卡片形式展示用户收藏的所有酒款，每张卡片显示酒瓶照片、酒名、产区、年份、个人评分。
+  支持按产区（苏格兰/爱尔兰/日本/美国等）和类型（单一麦芽/调和/波本等）筛选。系统预置至少5款示例酒款。
+
+  【酒款详情与评分】
+  酒款详情页展示酒瓶照片、酒名、蒸馏厂、产区、年份、酒精度、类型、价格区间、
+  个人评分（百分制或五星制）、风味标签和个人笔记。用户可对酒款进行评分和添加风味标签。
+
+  【品鉴笔记】
+  用户可为每款酒创建详细品鉴笔记，记录外观（颜色深浅）、香气（前调/中调/尾调）、
+  口感（入口/中段/余韵）、总体评价和评分。品鉴笔记支持按时间线查看。
+
+  【风味轮盘对比】
+  风味轮盘以雷达图形式展示酒款的各维度风味特征（烟熏、泥煤、果香、花香、蜂蜜、香料等），
+  支持选择两款酒进行风味对比，直观展示差异。
+
+  【品鉴会】
+  用户可创建品鉴会活动，设置主题、时间、地点、参与酒款列表，邀请其他用户参与。
+  品鉴会详情页展示活动信息和参与酒款，活动结束后可记录集体评分。
+
+  【发现与排行】
+  发现页展示热门酒款排行、最新品鉴笔记和推荐酒款，帮助用户探索新酒款。
+
+pages:
+  - name: "我的酒柜"
+    level: L1
+    description: "酒款收藏主页，卡片展示所有酒款，支持筛选"
+  - name: "品鉴记录"
+    level: L1
+    description: "品鉴笔记时间线，按日期展示所有品鉴记录"
+  - name: "品鉴会"
+    level: L1
+    description: "品鉴会活动列表，展示即将举行和历史品鉴会"
+  - name: "发现"
+    level: L1
+    description: "热门排行、推荐酒款和社区最新品鉴"
+  - name: "个人中心"
+    level: L1
+    description: "用户信息、收藏统计和设置"
+  - name: "酒款详情"
+    level: L2
+    description: "酒款完整信息展示，含评分和品鉴笔记入口"
+    entry_from: "我的酒柜"
+  - name: "品鉴笔记详情"
+    level: L2
+    description: "单条品鉴笔记的完整内容展示"
+    entry_from: "品鉴记录"
+  - name: "品鉴会详情"
+    level: L2
+    description: "品鉴会活动信息和参与酒款列表"
+    entry_from: "品鉴会"
+  - name: "风味轮盘"
+    level: L2
+    description: "酒款风味雷达图展示与两款酒对比"
+    entry_from: "酒款详情"
+  - name: "排行榜"
+    level: L2
+    description: "热门酒款排行和评分排名"
+    entry_from: "发现"
+  - name: "添加酒款"
+    level: L3
+    description: "新酒款入库表单，填写完整酒款信息"
+    entry_from: "我的酒柜"
+  - name: "新建品鉴笔记"
+    level: L3
+    description: "创建品鉴笔记，记录外观/香气/口感/评分"
+    entry_from: "酒款详情"
+  - name: "创建品鉴会"
+    level: L3
+    description: "创建品鉴会活动表单"
+    entry_from: "品鉴会"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - name: "酒柜"
+      icon: "wine"
+      page: "我的酒柜"
+    - name: "品鉴"
+      icon: "document-text"
+      page: "品鉴记录"
+    - name: "品鉴会"
+      icon: "people"
+      page: "品鉴会"
+    - name: "发现"
+      icon: "compass"
+      page: "发现"
+    - name: "我的"
+      icon: "person"
+      page: "个人中心"
+
+core_functions:
+  - 酒款档案管理与照片上传
+  - 品鉴笔记记录（外观/香气/口感/评分）
+  - 风味轮盘雷达图展示与对比
+  - 品鉴会创建与参与管理
+  - 产区/类型多维筛选浏览
+  - 热门排行与推荐发现
+  - 个人评分与风味标签
+  - 酒款搜索
+
+constraints:
+  - 需使用真实的后端应用
+  - 风味轮盘采用雷达图展示，至少6个风味维度
+  - 品鉴笔记必须包含外观、香气、口感三个维度
+  - 评分支持百分制或五星制，由用户选择
+  - 系统预置至少5款示例酒款供首页展示
+  - 用户只能管理自己的酒款和品鉴笔记（RLS隔离）
+
+notes: "E2E测试重点关注酒款CRUD闭环、品鉴笔记多维度录入、风味轮盘对比交互、品鉴会创建流程"

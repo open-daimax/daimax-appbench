@@ -1,0 +1,8 @@
+version: '1.0'
+name: 灵感创作
+description: 评测AI生成灵感创作类应用的能力，涵盖创意记录、灵感收集等场景
+dataset_version: V2
+status: active
+created_at: '2026-07-15'
+samples_index:
+- InspirationBox

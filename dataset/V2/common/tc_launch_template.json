@@ -1,0 +1,15 @@
+{
+  "description": "TC_LAUNCH 公共模板 - 所有样本共享此启动验证用例，各样本的 test_cases_default.json 不再重复包含 TC_LAUNCH",
+  "tc_launch": {
+    "id": "TC_LAUNCH",
+    "name": "应用启动验证",
+    "description": "验证应用成功启动，无白屏、黑屏或崩溃",
+    "steps": [
+      "启动应用 -> 预期: 应用正常启动，无白屏或崩溃"
+    ],
+    "expected_result": "应用成功启动",
+    "priority": "P0",
+    "category": "launch_check",
+    "notes": "此用例由公共模板提供，各样本 test_cases 中不再单独定义 TC_LAUNCH。执行测试时，测试框架自动注入此用例作为第一个执行的测试。"
+  }
+}

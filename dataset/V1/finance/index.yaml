@@ -1,0 +1,35 @@
+version: "1.0"
+name: "金融类应用评测样本集"
+description: |
+  金融类应用评测样本集,专注于评估AI生成金融理财类应用的能力。
+  覆盖股票行情、个人记账、银行业务等金融场景。
+  用于评测数据图表展示、账单管理、交易流程等专项能力。
+
+# 样本文件索引
+samples_index:
+  - dir: StockApp
+    sample_id: StockApp
+    title: 股票行情
+    app_category: 投资理财
+    dataset_version: "v1"
+    status: deprecated
+    deprecated_reason: "依赖实时外部API，无法独立评测"
+
+  - dir: BudgetTracker
+    sample_id: BudgetTracker
+    title: 记账本
+    app_category: 个人理财
+    dataset_version: "v1"
+    status: active
+
+  - dir: BankApp
+    sample_id: BankApp
+    title: 手机银行
+    app_category: 银行服务
+    dataset_version: "v1"
+    status: deprecated
+    deprecated_reason: "涉及金融合规，不可模拟"
+
+# 版本信息
+created_at: "2026-05-11"
+status: active

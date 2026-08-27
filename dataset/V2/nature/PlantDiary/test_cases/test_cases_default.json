@@ -1,0 +1,463 @@
+{
+  "prompt_id": "PlantDiary",
+  "platform": "default",
+  "dataset_version": "v2",
+  "test_cases": [
+    {
+      "id": "TC_LAUNCH",
+      "name": "应用启动验证",
+      "description": "验证应用成功启动，无白屏、黑屏或崩溃",
+      "steps": [
+        "启动应用 -> 预期: 应用正常启动，无白屏或崩溃"
+      ],
+      "expected_result": "应用成功启动",
+      "priority": "P0",
+      "category": "launch_check",
+      "functional_dimension": "basic_function",
+      "page_level": "L1"
+    },
+    {
+      "id": "TC001",
+      "name": "我的花园植物列表展示",
+      "description": "验证首页展示预置植物卡片信息完整",
+      "steps": [
+        "进入我的花园主页 -> 预期: 显示植物卡片列表",
+        "查看植物卡片内容 -> 预期: 卡片显示植物照片、名称、品种、上次浇水时间",
+        "确认预置植物 -> 预期: 展示系统预置的示例植物（石莲花、玉露、仙人掌）"
+      ],
+      "expected_result": "我的花园页正常展示预置植物卡片，信息完整",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_display",
+      "page_level": "L1",
+      "related_page": "我的花园"
+    },
+    {
+      "id": "TC002",
+      "name": "添加植物完整流程",
+      "description": "验证填写植物信息保存后出现在花园列表",
+      "steps": [
+        "在我的花园页点击右上角'+'按钮 -> 预期: 进入添加植物页面",
+        "上传植物照片 -> 预期: 照片上传成功",
+        "填写植物名称（必填）+选择品种+选择购入日期+设置浇水周期 -> 预期: 表单填写完成",
+        "点击保存 -> 预期: 保存成功提示",
+        "返回我的花园页 -> 预期: 新添加的植物出现在植物列表中"
+      ],
+      "expected_result": "植物添加成功后出现在我的花园列表",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "添加植物"
+    },
+    {
+      "id": "TC003",
+      "name": "植物详情页展示",
+      "description": "验证点击植物卡片进入详情页信息完整",
+      "steps": [
+        "在我的花园页点击某个植物卡片 -> 预期: 进入植物详情页",
+        "查看植物信息 -> 预期: 显示植物大图、名称、品种、购入日期、养护天数",
+        "查看浇水状态 -> 预期: 显示距下次浇水天数和浇水周期",
+        "查看功能入口 -> 预期: 显示成长相册入口、养护记录列表、健康评分入口、编辑和删除按钮"
+      ],
+      "expected_result": "植物详情页完整展示植物信息、浇水状态和功能入口",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_display",
+      "page_level": "L2",
+      "related_page": "植物详情"
+    },
+    {
+      "id": "TC004",
+      "name": "记录养护操作-浇水",
+      "description": "验证为植物记录浇水养护操作并出现在日志",
+      "steps": [
+        "在养护日志Tab点击添加按钮进入记录养护页 -> 预期: 显示记录养护表单",
+        "选择目标植物+选择操作类型'浇水'+填写备注 -> 预期: 表单填写完成",
+        "点击保存 -> 预期: 保存成功",
+        "返回养护日志页 -> 预期: 新的浇水记录出现在时间轴中，显示植物名、操作类型和日期"
+      ],
+      "expected_result": "浇水记录保存成功并显示在养护日志时间轴",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "记录养护"
+    },
+    {
+      "id": "TC005",
+      "name": "浇水提醒列表展示与状态",
+      "description": "验证浇水提醒页展示所有植物浇水计划及状态标签",
+      "steps": [
+        "切换到浇水提醒Tab -> 预期: 显示浇水计划列表",
+        "查看列表内容 -> 预期: 每项显示植物名、浇水周期、下次浇水日期、状态标签",
+        "确认状态标签 -> 预期: 状态为已浇/待浇/逾期之一",
+        "查看逾期项 -> 预期: 逾期植物有红色高亮标识"
+      ],
+      "expected_result": "浇水提醒列表正确展示所有植物浇水计划和状态",
+      "priority": "P0",
+      "category": "list_pagination",
+      "functional_dimension": "data_display",
+      "page_level": "L1",
+      "related_page": "浇水提醒"
+    },
+    {
+      "id": "TC006",
+      "name": "标记已浇水状态更新",
+      "description": "验证点击已浇水按钮后状态和下次浇水日期更新",
+      "steps": [
+        "切换到浇水提醒Tab -> 预期: 显示浇水计划列表",
+        "找到一个状态为'待浇'的植物，点击'已浇水'按钮 -> 预期: 状态变为'已浇'",
+        "查看下次浇水日期 -> 预期: 下次浇水日期根据浇水周期重新计算更新"
+      ],
+      "expected_result": "点击已浇水后状态更新为已浇，下次浇水日期重新计算",
+      "priority": "P0",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L1",
+      "related_page": "浇水提醒"
+    },
+    {
+      "id": "TC007",
+      "name": "病虫害百科列表展示",
+      "description": "验证从百科页进入病虫害百科展示预置病虫害信息",
+      "steps": [
+        "切换到百科Tab -> 预期: 显示品种百科列表和病虫害百科入口",
+        "点击病虫害百科入口 -> 预期: 进入病虫害百科页，显示病虫害列表",
+        "查看列表内容 -> 预期: 每项显示名称、缩略图、危害等级标签，展示至少5种常见病虫害"
+      ],
+      "expected_result": "病虫害百科页正常展示预置病虫害列表，信息完整",
+      "priority": "P0",
+      "category": "list_pagination",
+      "functional_dimension": "data_display",
+      "page_level": "L2",
+      "related_page": "病虫害百科"
+    },
+    {
+      "id": "TC008",
+      "name": "病虫害详情查看",
+      "description": "验证点击病虫害条目进入详情页查看防治信息",
+      "steps": [
+        "在病虫害百科页点击某个病虫害条目 -> 预期: 进入病虫害详情页",
+        "查看基本信息 -> 预期: 显示病虫害大图和名称",
+        "查看防治信息 -> 预期: 显示症状描述、防治方法、常见受害植物"
+      ],
+      "expected_result": "病虫害详情页完整展示症状、防治方法和受害植物信息",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_display",
+      "page_level": "L3",
+      "related_page": "病虫害详情"
+    },
+    {
+      "id": "TC009",
+      "name": "设置浇水周期",
+      "description": "验证为植物自定义浇水间隔天数和提醒时间",
+      "steps": [
+        "切换到浇水提醒Tab，点击某植物的设置按钮 -> 预期: 进入设置浇水周期页面",
+        "设置浇水间隔天数+设置提醒时间 -> 预期: 滑块或输入框可正常操作",
+        "点击保存 -> 预期: 保存成功",
+        "返回浇水提醒页 -> 预期: 该植物的浇水周期更新，下次浇水日期相应调整"
+      ],
+      "expected_result": "浇水周期修改成功，提醒列表同步更新",
+      "priority": "P0",
+      "category": "form_validation",
+      "functional_dimension": "data_modification",
+      "page_level": "L3",
+      "related_page": "设置浇水周期"
+    },
+    {
+      "id": "TC010",
+      "name": "养护日志时间轴展示",
+      "description": "验证养护日志Tab以时间轴形式展示所有记录",
+      "steps": [
+        "在养护日志Tab点击添加按钮进入记录养护页 -> 预期: 显示记录养护表单",
+        "选择植物+选择操作类型 -> 预期: 表单填写完成",
+        "点击保存 -> 预期: 记录保存成功",
+        "切换到养护日志Tab -> 预期: 显示时间轴列表",
+        "查看记录内容 -> 预期: 每条记录显示植物名、操作类型标签、日期、备注"
+      ],
+      "expected_result": "养护日志以时间轴形式正确展示所有养护记录",
+      "priority": "P0",
+      "category": "list_pagination",
+      "functional_dimension": "data_display",
+      "page_level": "L1",
+      "related_page": "养护日志"
+    },
+    {
+      "id": "TC011",
+      "name": "记录养护操作-施肥",
+      "description": "验证记录施肥类型的养护操作",
+      "steps": [
+        "在养护日志Tab点击添加按钮进入记录养护页 -> 预期: 显示记录养护表单",
+        "选择目标植物+选择操作类型'施肥'+填写备注 -> 预期: 表单填写完成",
+        "点击保存 -> 预期: 保存成功",
+        "在养护日志页查看 -> 预期: 新记录显示操作类型标签为'施肥'"
+      ],
+      "expected_result": "施肥记录保存成功，日志中正确显示施肥标签",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "记录养护"
+    },
+    {
+      "id": "TC012",
+      "name": "编辑植物信息",
+      "description": "验证在植物详情页编辑植物基本信息",
+      "steps": [
+        "在我的花园页点击某植物进入详情页 -> 预期: 显示植物详情",
+        "点击编辑按钮 -> 预期: 进入编辑页面，表单预填原有信息",
+        "修改植物名称 -> 预期: 名称正确修改",
+        "点击保存 -> 预期: 保存成功",
+        "返回植物详情页 -> 预期: 显示更新后的植物名称"
+      ],
+      "expected_result": "植物信息编辑成功，详情页显示更新后的内容",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "植物详情"
+    },
+    {
+      "id": "TC013",
+      "name": "删除植物",
+      "description": "验证在植物详情页删除植物后从列表移除",
+      "steps": [
+        "在我的花园页点击某植物进入详情页 -> 预期: 显示植物详情",
+        "点击删除按钮 -> 预期: 弹出确认提示",
+        "确认删除 -> 预期: 删除成功",
+        "返回我的花园页 -> 预期: 被删除的植物不再出现在列表中"
+      ],
+      "expected_result": "植物删除成功，从花园列表中消失",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "植物详情"
+    },
+    {
+      "id": "TC014",
+      "name": "搜索植物",
+      "description": "验证在我的花园页通过名称搜索植物",
+      "steps": [
+        "在我的花园页顶部搜索栏输入预置植物名称（如'玉露'）-> 预期: 实时显示匹配结果",
+        "查看搜索结果 -> 预期: 仅显示名称匹配的植物",
+        "清空搜索 -> 预期: 恢复显示全部植物"
+      ],
+      "expected_result": "搜索功能正常，能按名称过滤植物列表",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "我的花园"
+    },
+    {
+      "id": "TC015",
+      "name": "按植物筛选养护日志",
+      "description": "验证在养护日志页按植物筛选记录",
+      "steps": [
+        "切换到养护日志Tab -> 预期: 显示时间轴列表",
+        "点击筛选功能 -> 预期: 显示植物筛选选项",
+        "选择某个植物 -> 预期: 仅显示该植物的养护记录",
+        "切换为全部 -> 预期: 恢复显示所有植物的记录"
+      ],
+      "expected_result": "养护日志按植物筛选功能正常",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "养护日志"
+    },
+    {
+      "id": "TC016",
+      "name": "成长相册查看",
+      "description": "验证从植物详情进入成长相册查看照片时间线",
+      "steps": [
+        "在我的花园页点击某植物进入详情页 -> 预期: 显示植物详情",
+        "点击成长相册入口 -> 预期: 进入成长相册页面",
+        "查看相册内容 -> 预期: 按时间线展示照片，卡片显示拍摄日期"
+      ],
+      "expected_result": "成长相册正常展示照片时间线和拍摄日期",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "navigation",
+      "page_level": "L2",
+      "related_page": "成长相册"
+    },
+    {
+      "id": "TC017",
+      "name": "上传成长照片",
+      "description": "验证在成长相册中上传新照片",
+      "steps": [
+        "在我的花园页点击某植物进入详情页 -> 预期: 显示植物详情",
+        "点击成长相册入口 -> 预期: 进入成长相册页面",
+        "点击上传照片按钮 -> 预期: 弹出照片选择（模拟）",
+        "选择照片并确认 -> 预期: 照片上传成功，显示在相册时间线最新位置"
+      ],
+      "expected_result": "照片上传成功并显示在成长相册中",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L2",
+      "related_page": "成长相册"
+    },
+    {
+      "id": "TC018",
+      "name": "设置页功能操作",
+      "description": "验证设置页提醒开关切换和默认配置展示",
+      "steps": [
+        "从我的花园页进入设置页 -> 预期: 显示设置页面",
+        "查看提醒开关 -> 预期: 显示浇水提醒全局开关",
+        "切换提醒开关状态 -> 预期: 开关状态正确切换",
+        "查看其他选项 -> 预期: 显示默认浇水周期、数据导出、关于应用信息"
+      ],
+      "expected_result": "设置页各功能项正常展示，开关可操作",
+      "priority": "P1",
+      "category": "form_validation",
+      "functional_dimension": "basic_function",
+      "page_level": "L2",
+      "related_page": "设置"
+    },
+    {
+      "id": "TC019",
+      "name": "日志详情查看",
+      "description": "验证点击养护日志记录进入详情页",
+      "steps": [
+        "在养护日志Tab点击添加按钮进入记录养护页 -> 预期: 显示记录养护表单",
+        "选择植物+选择操作类型+填写备注 -> 预期: 表单填写完成",
+        "点击保存 -> 预期: 记录保存成功",
+        "在养护日志页点击该条记录 -> 预期: 进入日志详情页",
+        "查看详情 -> 预期: 显示植物名、操作类型、日期、备注等完整信息"
+      ],
+      "expected_result": "日志详情页完整展示单条养护记录信息",
+      "priority": "P2",
+      "category": "navigation",
+      "functional_dimension": "navigation",
+      "page_level": "L2",
+      "related_page": "日志详情"
+    },
+    {
+      "id": "TC020",
+      "name": "空状态展示验证",
+      "description": "验证无植物时花园页空状态展示",
+      "steps": [
+        "进入我的花园页 -> 预期: 显示植物列表页",
+        "查看空状态提示 -> 预期: 当无植物数据时显示空状态提示文案（如'还没有植物，快来添加第一盆吧'）",
+        "检查空状态入口 -> 预期: 显示添加新植物的入口按钮"
+      ],
+      "expected_result": "无植物时正确展示空状态提示文案和添加入口",
+      "priority": "P2",
+      "category": "boundary_exception",
+      "functional_dimension": "edge_case",
+      "page_level": "L1",
+      "related_page": "我的花园"
+    },
+    {
+      "id": "TC021",
+      "name": "底部Tab导航切换",
+      "description": "验证底部5个Tab可正常切换",
+      "steps": [
+        "点击底部'养护日志'Tab -> 预期: 切换到养护日志页",
+        "点击底部'浇水提醒'Tab -> 预期: 切换到浇水提醒页",
+        "点击底部'社区'Tab -> 预期: 切换到社区分享页",
+        "点击底部'百科'Tab -> 预期: 切换到百科页",
+        "点击底部'我的花园'Tab -> 预期: 返回花园主页"
+      ],
+      "expected_result": "5个底部Tab可正常切换到对应页面",
+      "priority": "P2",
+      "category": "navigation",
+      "functional_dimension": "navigation",
+      "page_level": "L1",
+      "related_page": "我的花园"
+    },
+    {
+      "id": "TC022",
+      "name": "品种百科浏览与品种详情",
+      "description": "验证百科页品种分类浏览和品种详情页信息展示",
+      "steps": [
+        "切换到百科Tab -> 预期: 按科属分类展示植物品种列表，每项显示品种名、科属、缩略图、收藏状态",
+        "点击某个品种条目 -> 预期: 进入品种详情页",
+        "查看品种信息 -> 预期: 显示品种大图、名称、科属分类信息",
+        "查看养护要点 -> 预期: 显示光照、浇水、温度、土壤建议",
+        "查看常见病虫害 -> 预期: 显示该品种常见病虫害列表"
+      ],
+      "expected_result": "品种百科分类浏览正常，品种详情页完整展示养护要点和病虫害信息",
+      "priority": "P1",
+      "category": "list_pagination",
+      "functional_dimension": "data_display",
+      "page_level": "L2",
+      "related_page": "品种详情"
+    },
+    {
+      "id": "TC023",
+      "name": "养护日历月视图展示",
+      "description": "验证养护日历页月视图展示和日期查看功能",
+      "steps": [
+        "切换到浇水提醒Tab，点击日历视图按钮 -> 预期: 进入养护日历页",
+        "查看月视图日历 -> 预期: 日历标记每天的养护事件，不同操作类型用不同颜色标记",
+        "点击有事件标记的日期 -> 预期: 显示当天待办养护任务列表",
+        "查看任务内容 -> 预期: 显示浇水/施肥/换盆等养护提醒"
+      ],
+      "expected_result": "养护日历月视图正确展示养护事件和待办任务",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "data_display",
+      "page_level": "L2",
+      "related_page": "养护日历"
+    },
+    {
+      "id": "TC024",
+      "name": "收藏品种后百科列表收藏状态同步",
+      "description": "验证在品种详情页收藏品种后百科列表收藏状态同步更新",
+      "steps": [
+        "切换到百科Tab -> 预期: 显示品种列表，每项显示收藏状态",
+        "点击某品种进入品种详情页 -> 预期: 显示品种详情和收藏按钮",
+        "点击收藏按钮 -> 预期: 收藏状态变为已收藏",
+        "返回百科列表页 -> 预期: 该品种条目的收藏状态标识更新为已收藏状态"
+      ],
+      "expected_result": "收藏品种后百科列表收藏状态同步更新为已收藏",
+      "priority": "P1",
+      "category": "cross_page_sync",
+      "functional_dimension": "state_management",
+      "page_level": "L2",
+      "related_page": "品种详情"
+    },
+    {
+      "id": "TC025",
+      "name": "健康评分后植物详情评分更新",
+      "description": "验证健康评分提交后植物详情页评分和趋势图更新",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "点击某植物卡片进入详情页，点击健康评分入口 -> 预期: 进入健康评分页",
+        "填写评估表单（土壤湿度/光照充足度/叶色健康度/虫害情况）-> 预期: 表单填写完成",
+        "提交评估 -> 预期: 显示综合健康评分（满分100）和养护建议",
+        "返回植物详情页 -> 预期: 健康评分区域显示最新评分，健康趋势图更新"
+      ],
+      "expected_result": "健康评分提交后植物详情页评分和趋势图同步更新",
+      "priority": "P1",
+      "category": "cross_page_sync",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "健康评分"
+    },
+    {
+      "id": "TC026",
+      "name": "发布心得后社区信息流同步",
+      "description": "验证发布心得后社区信息流同步更新",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 进入首页",
+        "切换到社区Tab -> 预期: 显示社区信息流",
+        "点击右上角发布按钮 -> 预期: 进入发布心得页",
+        "输入分享内容+选择关联植物标签 -> 预期: 表单填写完成",
+        "点击发布 -> 预期: 返回社区信息流，新动态出现在顶部，显示用户信息和植物标签"
+      ],
+      "expected_result": "发布心得后社区信息流同步出现新动态",
+      "priority": "P1",
+      "category": "cross_page_sync",
+      "functional_dimension": "data_creation",
+      "page_level": "L2",
+      "related_page": "发布心得"
+    }
+  ]
+}

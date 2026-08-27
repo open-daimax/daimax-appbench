@@ -1,0 +1,27 @@
+version: "1.0"
+name: "餐饮类应用评测样本集"
+description: |
+  餐饮相关应用评测样本集。
+  覆盖外卖点餐、餐厅点评等餐饮场景。
+  用于评测菜单浏览、购物车管理、订单流程、评价系统、收藏管理等能力。
+
+# 样本文件索引
+samples_index:
+  - dir: FoodOrder
+    sample_id: FoodOrder
+    title: 外卖点餐
+    app_category: 餐饮
+    dataset_version: "v1"
+    status: active
+
+  - dir: RestaurantReview
+    sample_id: RestaurantReview
+    title: 餐厅点评
+    app_category: 餐饮
+    dataset_version: "v2"
+    status: active
+
+# 版本信息
+created_at: "2026-07-07"
+updated_at: "2026-07-07"
+status: active

@@ -1,0 +1,127 @@
+version: "2.0"
+sample_id: VintageWatch
+title: 古董钟表收藏
+app_type: 收藏鉴赏
+dataset_version: "V2"
+complexity: high
+requires_backend: false
+requires_auth: false
+
+requirement: |
+  实现一个古董钟表收藏管理应用，面向钟表收藏爱好者提供藏品档案、保养记录、品牌索引和鉴定笔记功能：
+
+  【藏品陈列】
+  藏品陈列首页以精美卡片形式展示所有收藏的钟表，每张卡片显示表款照片、品牌、型号、年代、
+  机芯类型。支持按品牌和年代筛选，按入藏时间排序。系统预置至少5款示例钟表。
+
+  【钟表详情与档案】
+  钟表详情页展示表款高清图片、品牌、型号、生产年代、机芯类型（手动/自动/石英）、
+  表壳材质、表径尺寸、防水等级、序列号、购入价格、当前估值、入藏日期和个人笔记。
+  提供保养记录、鉴定笔记的快速入口。
+
+  【品牌索引】
+  品牌索引页按字母排序展示所有收录的钟表品牌（百达翡丽、劳力士、欧米茄、积家等），
+  点击品牌进入该品牌详情页，展示品牌介绍和用户收藏的该品牌钟表列表。
+
+  【保养日程】
+  保养日程页展示所有钟表的保养时间线，包括已完成的保养记录和即将到期的保养提醒。
+  每条保养记录包含保养日期、保养项目（洗油/抛光/更换配件等）、费用和维修商信息。
+  支持设置下次保养提醒时间。
+
+  【鉴定笔记】
+  鉴定笔记页展示用户的鉴定记录，记录每次鉴定的结论、鉴定师、鉴定日期、
+  真伪判断和价值评估。用户可为每款钟表添加多条鉴定笔记。
+
+  【个人中心】
+  个人中心展示收藏总览（总数、品牌分布、总估值）和设置入口。
+
+pages:
+  - name: "藏品陈列"
+    level: L1
+    description: "钟表收藏主页，卡片展示所有藏品"
+  - name: "品牌索引"
+    level: L1
+    description: "按字母排序的钟表品牌列表"
+  - name: "保养日程"
+    level: L1
+    description: "保养时间线和即将到期提醒"
+  - name: "鉴定笔记"
+    level: L1
+    description: "鉴定记录列表和鉴定历史"
+  - name: "个人中心"
+    level: L1
+    description: "收藏总览统计和设置"
+  - name: "钟表详情"
+    level: L2
+    description: "钟表完整档案信息展示"
+    entry_from: "藏品陈列"
+  - name: "品牌详情"
+    level: L2
+    description: "品牌介绍和该品牌藏品列表"
+    entry_from: "品牌索引"
+  - name: "保养记录列表"
+    level: L2
+    description: "某款钟表的所有保养历史记录"
+    entry_from: "钟表详情"
+  - name: "鉴定详情"
+    level: L2
+    description: "单条鉴定笔记的完整内容"
+    entry_from: "鉴定笔记"
+  - name: "搜索结果"
+    level: L2
+    description: "搜索关键词匹配的钟表结果列表"
+    entry_from: "藏品陈列"
+  - name: "添加藏品"
+    level: L3
+    description: "新钟表入藏表单，填写完整档案信息"
+    entry_from: "藏品陈列"
+  - name: "新建保养记录"
+    level: L3
+    description: "添加保养记录表单"
+    entry_from: "保养记录列表"
+  - name: "编辑鉴定笔记"
+    level: L3
+    description: "创建或编辑鉴定笔记"
+    entry_from: "鉴定笔记"
+  - name: "设置提醒"
+    level: L3
+    description: "设置保养提醒时间"
+    entry_from: "保养记录列表"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - name: "藏品"
+      icon: "watch"
+      page: "藏品陈列"
+    - name: "品牌"
+      icon: "bookmark"
+      page: "品牌索引"
+    - name: "保养"
+      icon: "construct"
+      page: "保养日程"
+    - name: "鉴定"
+      icon: "search"
+      page: "鉴定笔记"
+    - name: "我的"
+      icon: "person"
+      page: "个人中心"
+
+core_functions:
+  - 藏品档案管理与照片展示
+  - 保养记录追踪与提醒
+  - 品牌索引与品牌详情
+  - 鉴定笔记记录（真伪/价值）
+  - 保养日程提醒设置
+  - 收藏估值与统计
+  - 藏品搜索与品牌筛选
+  - 入藏时间线管理
+
+constraints:
+  - 机芯类型分为手动上链/自动上链/石英三类
+  - 保养提醒为本地通知，按用户设置时间触发
+  - 无需后端，所有数据本地存储
+  - 系统预置至少5款示例钟表数据供首页展示
+  - 品牌索引至少包含10个知名钟表品牌
+
+notes: "E2E测试重点关注藏品CRUD闭环、保养记录创建与提醒设置、品牌索引导航、鉴定笔记管理、数据持久化"

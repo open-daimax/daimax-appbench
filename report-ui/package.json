@@ -1,0 +1,26 @@
+{
+  "name": "evalapp-report-ui",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "本地评测报告 UI（纯静态、只读），构建产物为 evalapp CLI 使用的单文件模板",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:template": "vite build && cp dist/index.html ../evalapp/evaluation/results/reporting/templates/report_template.html"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.2.6",
+    "antd": "^5.12.0",
+    "dayjs": "^1.11.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "repository": ""
+}

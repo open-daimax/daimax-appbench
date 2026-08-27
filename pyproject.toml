@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evalapp"
+version = "0.2.0"
+description = "Open-source evaluation framework for AI app generators (appbench suite)"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "pydantic>=2.0",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "Pillow>=9.0",
+    "httpx>=0.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+# 可选加速依赖：orjson 可提供 3-5× 的 JSON 编解码速度。
+# 缺失时 utils/json_io 会自动回退到标准库 ``json``，不影响功能。
+perf = [
+    "orjson>=3.9",
+]
+
+[project.scripts]
+evalapp = "evalapp.cli:main"
+
+# ── 插件扩展点（供姊妹仓注册能力，本仓不声明任何实现）──────────────
+# * [project.entry-points."evalapp.generators"]  生成器插件（daimax-appbench-gen）
+#   注册 AppGenerator 子类，评测时经 evalapp.generators.get_generator 发现。
+# * [project.entry-points."evalapp.commands"]    CLI 子命令插件（如 generate /
+#   design-samples / run），启动时自动挂载到 evalapp 主命令组。
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["evalapp*"]
+exclude = ["results*"]
+
+[tool.setuptools.package-data]
+# 报告前端单文件模板（studio/frontend 构建产物，CLI 生成 report.html 时注入数据）
+"evalapp.evaluation.results.reporting" = ["templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]

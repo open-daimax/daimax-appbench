@@ -1,0 +1,77 @@
+daimax-appbench
+Copyright 2024-2026 daimax-appbench authors
+
+Licensed under the Apache License, Version 2.0.
+
+This product includes software developed by third parties.
+Below is a list of these third-party components and their licenses:
+
+===============================================================
+MIT License
+===============================================================
+
+pydantic - Data validation using Python type hints
+Copyright (c) Samuel Colvin and contributors
+https://github.com/pydantic/pydantic
+
+rich - Rich text and beautiful formatting in the terminal
+Copyright (c) Will McGugan
+https://github.com/Textualize/rich
+
+PyYAML - YAML parser and emitter for Python
+Copyright (c) Kirill Simonov
+https://github.com/yaml/pyyaml
+
+click - Composable command line interface toolkit
+Copyright (c) Pallets
+https://github.com/pallets/click
+
+httpx - A fully featured HTTP client for Python 3
+Copyright (c) Encode OSS Ltd.
+https://github.com/encode/httpx
+
+axios - Promise based HTTP client for the browser and node.js
+Copyright (c) Matt Zabriskie
+https://github.com/axios/axios
+
+commander - Complete solution for node.js command-line interfaces
+Copyright (c) TJ Holowaychuk
+https://github.com/tj/commander.js
+
+@midscene/android, @midscene/harmony, @midscene/ios, @midscene/web
+Copyright (c) Midscene contributors
+https://github.com/anthropics/midscene
+
+langsmith - LangSmith Client SDK for Python
+Copyright (c) LangChain, Inc.
+https://github.com/langchain-ai/langsmith-sdk
+
+===============================================================
+BSD License
+===============================================================
+
+Pillow - Python Imaging Library (Fork)
+Copyright (c) Jeffrey A. Clark and contributors
+License: Historical Permission Notice and Disclaimer (HPND)
+https://github.com/python-pillow/Pillow
+
+dotenv - Loads environment variables from .env file
+Copyright (c) Scott Motte
+License: BSD-2-Clause
+https://github.com/motdotla/dotenv
+
+===============================================================
+Apache License 2.0
+===============================================================
+
+playwright - Framework for Web Testing and Automation
+Copyright (c) Microsoft Corporation
+https://github.com/microsoft/playwright
+
+orjson - Fast, correct Python JSON library
+Copyright (c) ijl
+https://github.com/ijl/orjson
+
+TypeScript - TypeScript language
+Copyright (c) Microsoft Corporation
+https://github.com/microsoft/TypeScript

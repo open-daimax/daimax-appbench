@@ -1,0 +1,36 @@
+version: "1.0"
+sample_id: Gomoku
+title: 五子棋
+app_type: 游戏
+game_category: 棋类
+dataset_version: "v1"
+status: deprecated
+deprecated_reason: "对战类，需多人实时协同"
+requires_backend: true
+requires_auth: true
+
+requirement: |
+  实现一个五子棋在线对战游戏:
+  1. 匹配系统:玩家点击开始后自动匹配对手,匹配成功进入对局
+  2. 实时落子:玩家在15x15棋盘上落子,对手实时看到落子结果
+  3. 胜负判定:横、竖、斜任意方向连成5子即获胜,棋盘下满无五连则平局
+  4. 刷新重连:页面刷新后不再恢复旧对局,而是重新匹配新对手开始新局
+  5. 回合提示:清晰显示当前轮到哪方落子(黑棋/白棋)
+  6. 对局结果:显示胜负结果,可选择再来一局
+
+core_functions:
+  - 自动匹配对手
+  - 15x15棋盘渲染与交互
+  - 实时落子同步(broadcast)
+  - 五连胜负判定
+  - 回合状态显示
+  - 刷新后重新匹配
+  - 对局结果展示
+
+constraints:
+  - 需要使用后端实时服务的广播能力实现落子同步
+  - 需要用户登录注册功能
+  - 刷新页面后丢弃旧对局状态,重新匹配
+  - 棋盘为标准15x15
+
+notes: "测试后端的广播能力:落子数据实时广播、对手状态同步。重点验证 broadcast channel 的消息收发和刷新后状态重置逻辑。"

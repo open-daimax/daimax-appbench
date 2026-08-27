@@ -1,0 +1,8 @@
+version: '1.0'
+name: 休闲游戏
+description: 评测AI生成休闲游戏类应用的能力，涵盖消除类、益智类等游戏场景
+dataset_version: V2
+status: active
+created_at: '2026-07-15'
+samples_index:
+- HappyMatch

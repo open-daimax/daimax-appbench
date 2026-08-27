@@ -1,0 +1,92 @@
+:root {
+  /* 主色 */
+  --color-primary: #2563EB;
+  --color-primary-dark: #1D4ED8;
+  --color-primary-light: #EFF6FF;
+  --color-primary-hover: #DBEAFE;
+
+  /* 背景 */
+  --color-bg-page: #F8FAFC;
+  --color-bg-card: #FFFFFF;
+  --color-bg-sidebar: #F8FAFC;
+
+  /* 文字 */
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94A3B8;
+
+  /* 边框 */
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+
+  /* 状态 */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 滚动到达边缘时阻止浏览器接管手势：
+   禁用橡皮筋回弹与触控板左右轻扫触发的前进/后退导航，避免“滑出页面” */
+html,
+body {
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Compare target card hover effect */
+.compare-target-card:hover {
+  border: 2px dashed var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Recharts: prevent browser default outlines on SVG elements */
+.recharts-tooltip-cursor,
+.recharts-active-dot,
+.recharts-dot {
+  outline: none !important;
+}
+
+/* ── 侧边栏导航菜单（仅作用于 .app-sider-menu）── */
+/* inline 菜单项：圆角 6px、左右 margin 8px 的现代样式 */
+.app-sider-menu.ant-menu-dark.ant-menu-inline .ant-menu-item {
+  border-radius: 6px;
+  margin-inline: 8px;
+  width: calc(100% - 16px);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+/* hover 态：文字变亮 + 淡白底 */
+.app-sider-menu.ant-menu-dark .ant-menu-item:hover:not(.ant-menu-item-selected) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* 选中态：半透明蓝底（token 控制）+ 描边提升精致感 */
+.app-sider-menu.ant-menu-dark .ant-menu-item-selected {
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.35);
+}
+
+/* 主菜单与原右侧菜单之间的分隔线（深色背景下需提亮） */
+.app-sider-menu.ant-menu-dark .ant-menu-item-divider {
+  border-color: rgba(255, 255, 255, 0.08);
+  margin: 8px 16px;
+}

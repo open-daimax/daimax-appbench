@@ -1,0 +1,62 @@
+version: "1.0"
+name: "社交类应用评测样本集"
+description: |
+  社交类应用评测样本集,专注于评估AI生成社交社区类应用的能力。
+  覆盖内容浏览、发布、互动、用户关系、微博、短视频、论坛、即时通讯、直播、图片分享等多种社交形态。
+  用于评测信息流交互、内容管理、社交功能实现、实时通讯、权限控制等专项能力。
+
+# 样本文件索引
+samples_index:
+  - dir: Xiaohongshu
+    sample_id: Xiaohongshu
+    title: 小红书
+    app_category: 社交社区
+    dataset_version: "v1"
+    status: active
+
+  - dir: Weibo
+    sample_id: Weibo
+    title: 微博
+    app_category: 微博社交
+    dataset_version: "v1"
+    status: active
+
+  - dir: ShortVideo
+    sample_id: ShortVideo
+    title: 短视频
+    app_category: 短视频平台
+    dataset_version: "v1"
+    status: active
+
+  - dir: Forum
+    sample_id: Forum
+    title: 社区论坛
+    app_category: 论坛社区
+    dataset_version: "v1"
+    status: active
+
+  - dir: TeamPhotoUpload
+    sample_id: TeamPhotoUpload
+    title: 团建图片上传
+    app_category: 图片分享
+    dataset_version: "v2"
+    status: active
+
+  - dir: RealtimeChat
+    sample_id: RealtimeChat
+    title: 即时聊天系统
+    app_category: 即时通讯
+    dataset_version: "v1"
+    status: active
+
+  - dir: VotingApp
+    sample_id: VotingApp
+    title: 在线投票平台
+    app_category: 在线投票
+    dataset_version: "v2"
+    status: active
+
+# 版本信息
+created_at: "2026-04-30"
+updated_at: "2026-07-14"
+status: active

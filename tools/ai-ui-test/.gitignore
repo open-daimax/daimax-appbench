@@ -1,0 +1,46 @@
+# 依赖
+node_modules/
+
+# 编译输出
+dist/
+*.js
+*.d.ts
+*.js.map
+*.d.ts.map
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+.acoder/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# midscene文件
+midscene_run/
+
+.test_intermediates/
+
+# 缓存文件
+cache/
+
+# 内置资源目录（vendor/ 下的二进制资源需被 git 跟踪，勿加 *.apk/*.zip 忽略）
+!vendor/

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>评测报告</title>
+    <script>
+      // CLI 生成报告时将下面的 null 替换为报告 JSON（见 evalapp reporter.py）
+      window.__STATIC_REPORT__ = true
+      window.__REPORT_DATA__ = null /*__REPORT_DATA_PLACEHOLDER__*/
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/standalone/main.jsx"></script>
+  </body>
+</html>

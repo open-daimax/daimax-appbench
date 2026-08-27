@@ -1,0 +1,106 @@
+version: "1.0"
+name: "工具类应用评测样本集"
+description: |
+  工具类应用评测样本集,专注于评估AI生成工具类应用的能力。
+  覆盖天气、计算器、待办事项、日历、秒表计时等常用工具类型。
+  用于评测工具逻辑正确性、数据持久化、系统集成(通知/定位)等专项能力。
+
+# 样本文件索引
+samples_index:
+  - dir: Weather
+    sample_id: Weather
+    title: 天气
+    app_category: 工具
+    dataset_version: "v2"
+    status: deprecated
+    deprecated_reason: "确定拦截"
+
+  - dir: Calculator
+    sample_id: Calculator
+    title: 计算器
+    app_category: 工具
+    dataset_version: "v2"
+    status: deprecated
+    deprecated_reason: "功能过于简单，无法形成闭环体验"
+
+  - dir: TodoList
+    sample_id: TodoList
+    title: 待办事项
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: Calendar
+    sample_id: Calendar
+    title: 日历
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: Stopwatch
+    sample_id: Stopwatch
+    title: 秒表与计时器
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: HabitTracker
+    sample_id: HabitTracker
+    title: 习惯打卡
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: ExpenseNote
+    sample_id: ExpenseNote
+    title: 记账本
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: PomodoroTimer
+    sample_id: PomodoroTimer
+    title: 番茄钟
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: WhiteNoise
+    sample_id: WhiteNoise
+    title: 白噪音
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: TarotCard
+    sample_id: TarotCard
+    title: 塔罗牌占卜
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: InspirationBox
+    sample_id: InspirationBox
+    title: 灵感收集器
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: LotteryWheel
+    sample_id: LotteryWheel
+    title: 随机抽奖转盘
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+  - dir: WeeklyReport
+    sample_id: WeeklyReport
+    title: 团队周报收集器
+    app_category: 工具
+    dataset_version: "v2"
+    status: active
+
+# 版本信息
+created_at: "2026-04-30"
+updated_at: "2026-07-14"
+status: active

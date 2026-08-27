@@ -1,0 +1,123 @@
+version: "2.0"
+sample_id: StampCollection
+title: 集邮册管理
+app_type: 收藏鉴赏
+dataset_version: "V2"
+complexity: high
+requires_backend: false
+requires_auth: false
+
+requirement: |
+  实现一个集邮册管理应用，面向集邮爱好者提供邮票入册、年代/主题分类、品相评级和市值估算功能：
+
+  【我的邮册】
+  邮册首页以网格形式展示所有已收藏的邮票，每张邮票显示缩略图、名称、发行年份、品相等级。
+  支持按年代（50s/60s/70s/80s/90s/2000s等）和主题（人物/风景/动物/建筑/事件等）分类浏览。
+  系统预置至少5枚示例邮票数据。
+
+  【邮票详情与品相评级】
+  邮票详情页展示高清图片、邮票名称、发行国家、发行年份、面值、主题分类、
+  品相等级（全品/上品/中品/下品）、齿孔信息、印刷方式、存世量估计和个人备注。
+  用户可对邮票品相进行评级，品相直接影响估值。
+
+  【分类浏览】
+  提供年代分类和主题分类两种维度的浏览入口。年代分类按十年为一组展示各年代邮票数量，
+  主题分类展示各主题下的邮票集合。点击进入对应分类的邮票列表。
+
+  【市值行情】
+  市值行情页展示邮票的估算价值，根据品相等级、发行年代、稀缺度等因素计算估值。
+  支持查看单枚邮票估值详情和收藏总市值概览，提供市值趋势参考。
+
+  【交换管理】
+  用户可标记邮票为"可交换"状态，设置交换意向。交换页面展示已标记为可交换的邮票列表，
+  方便用户管理和展示自己愿意交换的邮票。
+
+  【个人中心】
+  个人中心展示收藏统计（总数、各品相分布、总估值），提供设置和数据导出入口。
+
+pages:
+  - name: "我的邮册"
+    level: L1
+    description: "邮票收藏主页，网格展示所有邮票，支持筛选"
+  - name: "分类浏览"
+    level: L1
+    description: "按年代和主题两个维度分类浏览邮票"
+  - name: "市值行情"
+    level: L1
+    description: "邮票估值概览和市值趋势"
+  - name: "交换"
+    level: L1
+    description: "管理可交换邮票列表和交换意向"
+  - name: "个人中心"
+    level: L1
+    description: "收藏统计、设置和数据管理"
+  - name: "邮票详情"
+    level: L2
+    description: "邮票完整信息展示，含品相评级和估值"
+    entry_from: "我的邮册"
+  - name: "年代列表"
+    level: L2
+    description: "某年代下的邮票列表"
+    entry_from: "分类浏览"
+  - name: "主题列表"
+    level: L2
+    description: "某主题下的邮票列表"
+    entry_from: "分类浏览"
+  - name: "品相评级"
+    level: L2
+    description: "邮票品相评级详情和标准说明"
+    entry_from: "邮票详情"
+  - name: "估值详情"
+    level: L2
+    description: "单枚邮票的估值计算详情和影响因素"
+    entry_from: "市值行情"
+  - name: "添加邮票"
+    level: L3
+    description: "新邮票入册表单，填写完整邮票信息"
+    entry_from: "我的邮册"
+  - name: "编辑信息"
+    level: L3
+    description: "修改已有邮票信息"
+    entry_from: "邮票详情"
+  - name: "设置品相"
+    level: L3
+    description: "详细品相评级设置"
+    entry_from: "品相评级"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - name: "邮册"
+      icon: "book"
+      page: "我的邮册"
+    - name: "分类"
+      icon: "grid"
+      page: "分类浏览"
+    - name: "市值"
+      icon: "trending-up"
+      page: "市值行情"
+    - name: "交换"
+      icon: "swap-horizontal"
+      page: "交换"
+    - name: "我的"
+      icon: "person"
+      page: "个人中心"
+
+core_functions:
+  - 邮票入册与图片管理
+  - 品相评级（全品/上品/中品/下品）
+  - 年代分类浏览（按十年分组）
+  - 主题分类浏览（人物/风景/动物等）
+  - 市值估算与收藏总值计算
+  - 交换意向标记与管理
+  - 收藏统计与数据可视化
+  - 邮票搜索与筛选
+
+constraints:
+  - 品相等级分为全品/上品/中品/下品四级，品相直接影响市值估算系数
+  - 市值估算为本地算法计算（基于品相、年代、稀缺度），非实时在线数据
+  - 无需后端，所有数据本地存储（AsyncStorage或类似方案）
+  - 系统预置至少5枚示例邮票数据供首页展示
+  - 交换功能仅为标记管理，无实际在线交换流程
+
+notes: "E2E测试重点关注邮票CRUD闭环、品相评级对估值影响、分类浏览准确性、本地数据持久化"

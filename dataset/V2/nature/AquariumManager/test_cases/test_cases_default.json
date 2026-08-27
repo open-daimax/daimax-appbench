@@ -1,0 +1,417 @@
+{
+  "prompt_id": "AquariumManager",
+  "platform": "default",
+  "dataset_version": "v2",
+  "test_cases": [
+    {
+      "id": "TC001",
+      "name": "添加鱼缸完整流程",
+      "description": "验证填写鱼缸信息保存后出现在列表",
+      "steps": [
+        "在我的鱼缸页点击右上角'+'按钮 -> 预期: 进入添加鱼缸页面",
+        "填写名称'90cm海缸'，选择类型'海水'，输入容量200升，选择开缸日期 -> 预期: 各表单项可正常填写",
+        "点击保存 -> 预期: 保存成功",
+        "返回我的鱼缸页 -> 预期: 新添加的'90cm海缸'出现在列表中"
+      ],
+      "expected_result": "鱼缸'90cm海缸'添加成功后出现在列表",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "添加鱼缸"
+    },
+    {
+      "id": "TC002",
+      "name": "记录水质数据-正常状态",
+      "description": "验证记录符合正常范围的水质数据并自动判定状态为正常",
+      "steps": [
+        "在水质监测Tab点击右上角'+'按钮 -> 预期: 进入记录水质页面",
+        "选择目标鱼缸，输入pH值7.0，温度26℃，氨氮浓度0.2mg/L -> 预期: 各数据可正常输入",
+        "点击保存 -> 预期: 保存成功，状态自动判定为'正常'",
+        "返回水质监测页 -> 预期: 新记录出现在列表中，状态标签为绿色'正常'"
+      ],
+      "expected_result": "水质记录保存成功，状态自动判定为正常（绿色标签）",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "记录水质"
+    },
+    {
+      "id": "TC003",
+      "name": "水质状态预警-危险",
+      "description": "验证氨氮浓度达到危险阈值时水质状态自动判定为危险",
+      "steps": [
+        "在水质监测Tab点击'+'进入记录水质页 -> 预期: 显示表单",
+        "选择鱼缸，输入pH值7.2，温度25℃，氨氮浓度1.5mg/L -> 预期: 数据输入正常",
+        "点击保存 -> 预期: 保存成功，状态自动判定为'危险'",
+        "返回水质监测页 -> 预期: 新记录状态标签为红色'危险'"
+      ],
+      "expected_result": "氨氮1.5mg/L时状态正确判定为危险（红色标签）",
+      "priority": "P0",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L3",
+      "related_page": "记录水质"
+    },
+    {
+      "id": "TC004",
+      "name": "水质状态预警-警告",
+      "description": "验证pH超出正常范围时水质状态判定为警告",
+      "steps": [
+        "在水质监测Tab点击'+'进入记录水质页 -> 预期: 显示表单",
+        "选择鱼缸，输入pH值8.5，温度25℃，氨氮浓度0.3mg/L -> 预期: 数据输入正常",
+        "点击保存 -> 预期: 保存成功，状态自动判定为'警告'",
+        "返回水质监测页 -> 预期: 新记录状态标签为黄色'警告'"
+      ],
+      "expected_result": "pH超出正常范围时状态正确判定为警告（黄色标签）",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L3",
+      "related_page": "记录水质"
+    },
+    {
+      "id": "TC005",
+      "name": "添加生物完整流程",
+      "description": "验证为鱼缸添加生物信息并出现在档案列表",
+      "steps": [
+        "在生物档案Tab点击右上角'+'按钮 -> 预期: 进入添加生物页面",
+        "选择所属鱼缸，填写名称'红绿灯鱼'，选择种类'鱼类'，输入数量10，选择入缸日期 -> 预期: 表单填写正常",
+        "点击保存 -> 预期: 保存成功",
+        "返回生物档案页 -> 预期: '红绿灯鱼'出现在生物列表中"
+      ],
+      "expected_result": "生物'红绿灯鱼'添加成功并显示在档案列表",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "添加生物"
+    },
+    {
+      "id": "TC006",
+      "name": "设置投喂计划",
+      "description": "验证设置投喂计划并出现在计划列表",
+      "steps": [
+        "在投喂计划Tab点击右上角'+'按钮 -> 预期: 进入设置投喂时间页",
+        "选择目标鱼缸，选择饲料类型'颗粒料'，设置频率'每天2次'，设置投喂时间 -> 预期: 各选项可正常设置",
+        "点击保存 -> 预期: 保存成功",
+        "返回投喂计划页 -> 预期: 新计划出现在列表中，显示鱼缸名、饲料、频率和时间"
+      ],
+      "expected_result": "投喂计划设置成功并显示在计划列表",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "设置投喂时间"
+    },
+    {
+      "id": "TC007",
+      "name": "标记已投喂状态更新",
+      "description": "验证点击已投喂按钮后状态更新且下次投喂时间重新计算",
+      "steps": [
+        "在投喂计划Tab点击'+'设置一个投喂计划并保存 -> 预期: 计划出现在列表中",
+        "在投喂计划页找到状态为'待喂'的计划项 -> 预期: 显示待喂状态和已投喂按钮",
+        "点击'已投喂'按钮 -> 预期: 状态变为'已喂'",
+        "查看下次投喂时间 -> 预期: 根据频率重新计算下次投喂时间"
+      ],
+      "expected_result": "标记已投喂后状态更新为已喂，下次投喂时间重新计算",
+      "priority": "P0",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L1",
+      "related_page": "投喂计划"
+    },
+    {
+      "id": "TC008",
+      "name": "添加设备完整流程",
+      "description": "验证为鱼缸添加设备后出现在设备管理列表",
+      "steps": [
+        "从鱼缸详情页点击设备管理入口 -> 预期: 进入设备管理页，显示当前设备列表",
+        "点击添加设备进入添加设备页 -> 预期: 显示添加设备表单",
+        "选择设备类型'加热棒'，填写名称'300W加热棒'，设置维护周期30天，设置上次维护日期 -> 预期: 表单填写正常",
+        "点击保存 -> 预期: 保存成功，返回设备管理页",
+        "查看设备列表 -> 预期: '300W加热棒'出现在列表中，显示类型'加热棒'和下次维护日期"
+      ],
+      "expected_result": "设备'300W加热棒'添加成功并显示在设备管理列表中",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L3",
+      "related_page": "添加设备"
+    },
+    {
+      "id": "TC009",
+      "name": "编辑鱼缸信息",
+      "description": "验证在鱼缸详情页编辑鱼缸基本信息",
+      "steps": [
+        "在我的鱼缸页点击预置的60cm草缸进入详情页 -> 预期: 显示鱼缸详情",
+        "点击编辑按钮 -> 预期: 进入编辑页面，表单预填原有信息",
+        "修改鱼缸名称并保存 -> 预期: 保存成功",
+        "返回鱼缸详情页 -> 预期: 显示更新后的名称"
+      ],
+      "expected_result": "鱼缸信息编辑成功，详情页显示更新内容",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "鱼缸详情"
+    },
+    {
+      "id": "TC010",
+      "name": "删除鱼缸",
+      "description": "验证删除鱼缸后从列表移除",
+      "steps": [
+        "在我的鱼缸页点击'+'添加鱼缸'测试缸A'类型海水容量100升 -> 预期: 列表出现'测试缸A'",
+        "点击'测试缸A'进入详情页 -> 预期: 显示鱼缸详情信息",
+        "点击删除按钮 -> 预期: 弹出确认提示",
+        "确认删除 -> 预期: 删除成功，返回我的鱼缸页",
+        "在鱼缸列表中查找'测试缸A' -> 预期: '测试缸A'已从列表中移除"
+      ],
+      "expected_result": "鱼缸'测试缸A'删除成功，从列表中消失",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "鱼缸详情"
+    },
+    {
+      "id": "TC011",
+      "name": "添加鱼缸表单必填校验",
+      "description": "验证鱼缸名称为空时提交应被阻止并提示错误",
+      "steps": [
+        "在我的鱼缸页点击'+'进入添加鱼缸页 -> 预期: 显示空白表单",
+        "不填写名称，仅选择类型'淡水'和容量50升，点击保存 -> 预期: 显示名称必填的错误提示，保存被阻止",
+        "填写名称'小型缸'后再次保存 -> 预期: 保存成功，返回鱼缸列表"
+      ],
+      "expected_result": "鱼缸名称为空时保存被阻止并显示必填校验错误，填写后可正常保存",
+      "priority": "P1",
+      "category": "form_validation",
+      "functional_dimension": "form_validation",
+      "page_level": "L3",
+      "related_page": "添加鱼缸"
+    },
+    {
+      "id": "TC012",
+      "name": "生物档案按鱼缸筛选",
+      "description": "验证在生物档案页按鱼缸筛选生物",
+      "steps": [
+        "在生物档案页点击筛选功能，选择60cm草缸 -> 预期: 仅显示60cm草缸的生物",
+        "验证筛选结果 -> 预期: 列表中所有生物所属鱼缸均为60cm草缸",
+        "切换为全部 -> 预期: 恢复显示所有生物"
+      ],
+      "expected_result": "生物档案按鱼缸筛选功能正常，切换全部后恢复",
+      "priority": "P0",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "生物档案"
+    },
+    {
+      "id": "TC013",
+      "name": "删除鱼缸后关联生物消失验证",
+      "description": "验证删除鱼缸后该鱼缸下的生物在生物档案中也不再显示",
+      "steps": [
+        "添加一个新鱼缸'临时缸' -> 预期: 添加成功",
+        "为'临时缸'添加生物'孔雀鱼'种类'鱼类'数量5 -> 预期: 生物添加成功，在生物档案中可见",
+        "返回我的鱼缸页删除'临时缸' -> 预期: 删除成功",
+        "在生物档案页查找'孔雀鱼' -> 预期: '孔雀鱼'已不显示在列表中"
+      ],
+      "expected_result": "删除'临时缸'后，其关联的'孔雀鱼'在生物档案中同步消失",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "data_modification",
+      "page_level": "L1",
+      "related_page": "生物档案"
+    },
+    {
+      "id": "TC014",
+      "name": "水质记录时间倒序排列验证",
+      "description": "验证多条水质记录按检测时间倒序排列，最新记录在最前",
+      "steps": [
+        "为60cm草缸记录第一条水质数据pH6.8温度25℃氨氮0.1 -> 预期: 记录保存成功",
+        "再为60cm草缸记录第二条水质数据pH7.2温度27℃氨氮0.3 -> 预期: 记录保存成功",
+        "在水质监测页查看60cm草缸的记录列表 -> 预期: 第二条记录（pH7.2）显示在第一条（pH6.8）上方"
+      ],
+      "expected_result": "水质记录列表按时间倒序排列，后录入的pH7.2记录排在先录入的pH6.8记录之前",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "水质监测"
+    },
+    {
+      "id": "TC015",
+      "name": "记录危险水质后鱼缸卡片状态同步",
+      "description": "验证记录危险水质数据后我的鱼缸页卡片上水质状态指示同步更新",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "在我的鱼缸页查看60cm草缸卡片的水质状态指示 -> 预期: 显示当前水质状态",
+        "切换到水质监测Tab，点击'+'进入记录水质页 -> 预期: 显示记录表单",
+        "选择60cm草缸，输入pH7.0、温度26℃、氨氮1.5mg/L，保存 -> 预期: 保存成功，状态判定为'危险'",
+        "切换回我的鱼缸Tab查看60cm草缸卡片 -> 预期: 水质状态指示变为危险(红色)"
+      ],
+      "expected_result": "记录氨氮1.5mg/L危险水质后，60cm草缸卡片水质状态指示同步更新为危险(红色)",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "cross_page_sync",
+      "page_level": "L3->L1",
+      "related_page": "记录水质"
+    },
+    {
+      "id": "TC016",
+      "name": "编辑鱼缸名称后列表卡片同步",
+      "description": "验证编辑鱼缸名称后我的鱼缸列表卡片名称同步更新",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "在我的鱼缸页点击60cm草缸进入详情页 -> 预期: 显示鱼缸详情",
+        "点击编辑，将名称改为'南美风情缸'并保存 -> 预期: 保存成功",
+        "返回我的鱼缸列表 -> 预期: 原60cm草缸卡片名称已更新为'南美风情缸'"
+      ],
+      "expected_result": "鱼缸详情编辑名称为'南美风情缸'后，我的鱼缸列表卡片名称同步更新",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "cross_page_sync",
+      "page_level": "L2->L1",
+      "related_page": "鱼缸详情"
+    },
+    {
+      "id": "TC017",
+      "name": "删除生物后档案列表和鱼缸详情同步",
+      "description": "验证删除生物后生物档案列表该生物消失，且鱼缸详情生物数减少",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "在生物档案Tab为60cm草缸添加生物'黄金螺'种类'螺类'数量3 -> 预期: 添加成功，列表中可见'黄金螺'",
+        "点击'黄金螺'进入生物详情，点击删除按钮并确认 -> 预期: 删除成功，返回生物档案页",
+        "在生物档案列表中查找'黄金螺' -> 预期: '黄金螺'已从列表中消失",
+        "进入60cm草缸详情页查看生物列表摘要 -> 预期: '黄金螺'不再包含在内"
+      ],
+      "expected_result": "生物详情页删除'黄金螺'后，生物档案列表和60cm草缸生物列表同步消失",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "cross_page_sync",
+      "page_level": "L2->L1",
+      "related_page": "生物详情"
+    },
+    {
+      "id": "TC018",
+      "name": "发布交易后社区鱼市列表同步",
+      "description": "验证发布交易帖子后返回社区鱼市信息流出现新帖子",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "切换到社区鱼市Tab，点击发布交易按钮 -> 预期: 进入发布交易页",
+        "选择交易方式'赠送'，填写标题'小丑鱼免费送'，描述'健康活泼'，品种'鱼类' -> 预期: 表单填写正常",
+        "点击发布 -> 预期: 发布成功",
+        "返回社区鱼市信息流 -> 预期: 列表中出现'小丑鱼免费送'帖子，显示交易方式'赠送'"
+      ],
+      "expected_result": "发布交易后返回社区鱼市列表，'小丑鱼免费送'帖子立即出现在信息流中",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "cross_page_sync",
+      "page_level": "L3->L1",
+      "related_page": "发布交易"
+    },
+    {
+      "id": "TC019",
+      "name": "异常告警页面进入与告警列表",
+      "description": "验证可从鱼缸详情进入异常告警页面并查看告警记录",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "进入60cm草缸详情页 -> 预期: 显示鱼缸详情信息",
+        "点击异常告警入口 -> 预期: 进入异常告警页",
+        "查看告警列表 -> 预期: 显示告警记录列表，每条含鱼缸名、告警时间、超标指标和严重等级"
+      ],
+      "expected_result": "成功进入异常告警页并显示告警列表",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "navigation",
+      "page_level": "L2",
+      "related_page": "异常告警"
+    },
+    {
+      "id": "TC020",
+      "name": "告警状态管理",
+      "description": "验证可以修改告警状态为已处理",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "从60cm草缸详情进入异常告警页 -> 预期: 显示告警列表",
+        "点击列表中状态为'未处理'的告警 -> 预期: 显示告警详情，当前状态为'未处理'",
+        "将告警状态标记为'已处理' -> 预期: 状态更新为'已处理'"
+      ],
+      "expected_result": "告警状态可从'未处理'修改为'已处理'",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L2",
+      "related_page": "异常告警"
+    },
+    {
+      "id": "TC021",
+      "name": "统计仪表板趋势图展示",
+      "description": "验证统计仪表板展示水质趋势图表和时间范围切换",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "从我的鱼缸页点击统计仪表板入口 -> 预期: 进入统计仪表板页",
+        "查看图表 -> 预期: 显示水温趋势图、pH趋势图和亚硝酸盐趋势图",
+        "切换时间范围 -> 预期: 图表数据按所选时间范围（如7天/30天/90天）更新"
+      ],
+      "expected_result": "统计仪表板正确展示水质趋势图表并支持时间范围切换",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "data_view",
+      "page_level": "L2",
+      "related_page": "统计仪表板"
+    },
+    {
+      "id": "TC022",
+      "name": "水质搜索筛选功能",
+      "description": "验证水质监测页的多维度搜索筛选功能",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "切换到水质监测Tab，点击搜索筛选入口 -> 预期: 进入水质搜索筛选页",
+        "选择筛选条件（如按状态筛选'警告'） -> 预期: 筛选条件设置正常",
+        "查看筛选结果 -> 预期: 结果列表仅显示符合筛选条件的水质记录"
+      ],
+      "expected_result": "水质搜索筛选功能正常，结果列表符合筛选条件",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L2",
+      "related_page": "水质搜索筛选"
+    },
+    {
+      "id": "TC023",
+      "name": "设置页面功能验证",
+      "description": "验证设置页面各项设置功能可用",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "从我的鱼缸页点击设置入口 -> 预期: 进入设置页",
+        "查看设置项 -> 预期: 显示水质警告阈值、投喂提醒、告警通知、设备维护提醒、温度单位等设置项",
+        "切换温度单位设置 -> 预期: 设置修改成功并生效"
+      ],
+      "expected_result": "设置页正确展示各项设置并支持修改",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "data_modification",
+      "page_level": "L2",
+      "related_page": "设置"
+    },
+    {
+      "id": "TC024",
+      "name": "社区鱼市交易详情查看",
+      "description": "验证可进入交易详情页查看帖子完整信息和发布者评价",
+      "steps": [
+        "使用邮箱123@qq.com密码12345678登录 -> 预期: 登录成功进入首页",
+        "切换到社区鱼市Tab -> 预期: 显示交易信息流",
+        "点击信息流中的交易帖子 -> 预期: 进入交易详情页",
+        "查看详情内容 -> 预期: 显示帖子完整信息、发布者信息和评价星级、联系发布者按钮"
+      ],
+      "expected_result": "交易详情页正确展示帖子完整信息、发布者信息和评价",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "data_view",
+      "page_level": "L2",
+      "related_page": "交易详情"
+    }
+  ]
+}

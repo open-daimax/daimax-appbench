@@ -1,0 +1,10 @@
+version: '1.0'
+name: 电商购物
+description: 评测AI生成电商类应用的能力，涵盖二手交易、限时秒杀、综合购物等场景
+dataset_version: V2
+status: active
+created_at: '2026-07-15'
+samples_index:
+- FlashSale
+- SecondHand
+- ShoppingApp

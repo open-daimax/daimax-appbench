@@ -1,0 +1,81 @@
+# 仅供参考 — 实际评分规则定义在 aesthetics_prompt.py 中
+# 本文件不被代码消费，仅作为规则版本化参考文档保留
+
+version: "1.0"
+description: "UI美观度评分规则配置"
+
+scoring_dimensions:
+  - name: "color_harmony"
+    label: "配色协调性"
+    weight: 0.25
+    description: "色彩搭配是否和谐，有无大红大紫/荧光色冲突"
+    negative_examples:
+      - "大面积高饱和度颜色（荧光绿、品红、大红）"
+      - "超过3种主色调混搭"
+      - "背景与文字对比度不足或刺眼"
+    positive_examples:
+      - "统一的品牌色+中性辅助色"
+      - "渐变过渡自然"
+
+  - name: "layout_quality"
+    label: "布局规整度"
+    weight: 0.25
+    description: "间距一致性、对齐、留白是否合理"
+    negative_examples:
+      - "元素间距不一致"
+      - "内容溢出或截断"
+      - "无留白，内容堆叠拥挤"
+    positive_examples:
+      - "统一的内边距和间距"
+      - "合理的留白"
+
+  - name: "visual_hierarchy"
+    label: "视觉层次"
+    weight: 0.20
+    description: "信息主次是否分明，视觉焦点是否清晰"
+    negative_examples:
+      - "所有文字大小相同，无主次"
+      - "重要操作按钮不突出"
+    positive_examples:
+      - "标题、正文、辅助信息层次分明"
+
+  - name: "typography"
+    label: "字体规范性"
+    weight: 0.15
+    description: "字号层级、字体一致性、可读性"
+    negative_examples:
+      - "多种字体混用"
+      - "emoji滥用替代正式UI元素"
+      - "字体过小难以阅读"
+    positive_examples:
+      - "统一字体，清晰可读"
+
+  - name: "professionalism"
+    label: "整体专业感"
+    weight: 0.15
+    description: "是否像正式产品而非demo/学生作业"
+    negative_examples:
+      - "像学生作业或低质量模板"
+      - "图标风格不统一（线性+填充混搭）"
+      - "按钮样式不一致"
+    positive_examples:
+      - "整体风格统一，接近商业产品"
+
+frame_selection:
+  max_frames: 5
+  similarity_threshold: 0.9
+
+score_range:
+  min: 0
+  max: 10
+  levels:
+    - range: [0, 3]
+      label: "差 - 明显不专业"
+    - range: [3, 5]
+      label: "一般 - 有明显瑕疵"
+    - range: [5, 7]
+      label: "中等 - 基本可用"
+    - range: [7, 9]
+      label: "良好 - 较专业"
+    - range: [9, 10]
+      label: "优秀 - 接近商业水准"

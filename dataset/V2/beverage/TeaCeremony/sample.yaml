@@ -1,0 +1,144 @@
+version: "2.0"
+sample_id: TeaCeremony
+title: 茶道品鉴笔记
+app_type: 饮品酿造
+dataset_version: "V2"
+complexity: high
+requires_backend: true
+requires_auth: true
+
+requirement: |
+  实现一个茶道品鉴笔记应用，为茶文化爱好者提供茶谱管理、品鉴记录、冲泡计时、器具档案与茶会邀约功能：
+
+  【茶谱首页】
+  1. 顶部搜索栏：支持按茶叶名称、品类搜索
+  2. 分类导航：绿茶/红茶/乌龙茶/白茶/普洱/花茶
+  3. 推荐茶叶卡片列表：显示茶叶图片、名称、品类、产地、评分
+  4. 下拉加载更多茶叶
+  5. 系统预置至少8种示例茶叶数据
+
+  【品鉴记录Tab】
+  6. 品鉴记录时间线列表：每条显示茶叶名称、品鉴日期、总体评分、缩略图
+  7. 支持按评分和日期排序
+  8. 点击进入品鉴详情
+
+  【冲泡计时Tab】
+  9. 冲泡计时器主界面：大字体倒计时显示
+  10. 快捷预设时间按钮：30秒/1分钟/3分钟/5分钟
+  11. 自定义时间设置
+  12. 开始/暂停/重置按钮
+  13. 冲泡次数记录（第几泡）
+  14. 计时结束提醒
+
+  【茶会Tab】
+  15. 茶会列表：显示茶会主题、时间、地点、参与人数
+  16. 创建茶会：设置主题、时间、地点、备注
+  17. 茶会详情：查看完整信息与参与者列表
+  18. 邀请好友功能（输入邮箱邀请）
+
+  【我的Tab】
+  19. 个人信息展示：头像、昵称、品鉴总数统计
+  20. 器具档案入口：管理茶具清单（名称、类型、材质、获得日期）
+  21. 收藏茶叶列表
+  22. 退出登录
+
+  【茶叶详情页】
+  23. 茶叶完整信息：名称、品类、产地、年份、工艺描述
+  24. 品鉴记录关联：该茶叶的所有品鉴记录
+  25. 收藏/取消收藏按钮
+
+  【新建品鉴记录】
+  26. 选择品鉴茶叶
+  27. 品鉴维度评分：香气/汤色/滋味/叶底（各1-5分）
+  28. 冲泡参数记录：水温、投茶量、冲泡时间
+  29. 文字品鉴笔记
+  30. 保存品鉴记录
+
+pages:
+  - name: "茶谱首页"
+    level: "L1"
+    description: "茶叶分类浏览、搜索与推荐列表"
+    entry_from: "底部Tab-茶谱"
+  - name: "品鉴记录列表"
+    level: "L1"
+    description: "品鉴记录时间线展示与排序"
+    entry_from: "底部Tab-品鉴"
+  - name: "冲泡计时"
+    level: "L1"
+    description: "冲泡倒计时器与泡次管理"
+    entry_from: "底部Tab-计时"
+  - name: "茶会列表"
+    level: "L1"
+    description: "茶会活动浏览与管理"
+    entry_from: "底部Tab-茶会"
+  - name: "我的"
+    level: "L1"
+    description: "个人信息、器具档案、收藏与设置"
+    entry_from: "底部Tab-我的"
+  - name: "茶叶详情"
+    level: "L2"
+    description: "茶叶完整信息与关联品鉴记录"
+    entry_from: "茶谱首页-点击茶叶卡片"
+  - name: "品鉴详情"
+    level: "L2"
+    description: "单条品鉴记录完整内容"
+    entry_from: "品鉴记录列表-点击记录"
+  - name: "器具列表"
+    level: "L2"
+    description: "茶具档案管理列表"
+    entry_from: "我的-器具档案入口"
+  - name: "茶会详情"
+    level: "L2"
+    description: "茶会完整信息与参与者"
+    entry_from: "茶会列表-点击茶会卡片"
+  - name: "收藏列表"
+    level: "L2"
+    description: "已收藏茶叶浏览"
+    entry_from: "我的-收藏入口"
+  - name: "注册登录"
+    level: "L3"
+    description: "用户注册与登录"
+    entry_from: "应用启动/我的页面"
+  - name: "添加茶叶"
+    level: "L3"
+    description: "录入新茶叶信息"
+    entry_from: "茶谱首页-添加按钮"
+  - name: "新建品鉴"
+    level: "L3"
+    description: "创建品鉴记录表单"
+    entry_from: "品鉴记录列表-新建按钮/茶叶详情-新建品鉴"
+  - name: "创建茶会"
+    level: "L3"
+    description: "发起茶会活动表单"
+    entry_from: "茶会列表-创建按钮"
+  - name: "编辑器具"
+    level: "L3"
+    description: "新增或编辑茶具信息"
+    entry_from: "器具列表-添加/编辑按钮"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - { name: "茶谱", icon: "leaf", page: "茶谱首页" }
+    - { name: "品鉴", icon: "clipboard", page: "品鉴记录列表" }
+    - { name: "计时", icon: "clock", page: "冲泡计时" }
+    - { name: "茶会", icon: "users", page: "茶会列表" }
+    - { name: "我的", icon: "user", page: "我的" }
+
+core_functions:
+  - 茶叶分类浏览与搜索
+  - 茶叶信息录入与管理
+  - 品鉴记录（多维度评分+冲泡参数+笔记）
+  - 冲泡倒计时器（预设/自定义时间、泡次记录）
+  - 器具档案管理
+  - 茶会创建与邀约
+  - 收藏管理
+
+constraints:
+  - 需使用真实的后端应用
+  - 后端通过权限控制确保用户数据隔离
+  - 计时器精度±500ms，支持后台运行提醒
+  - 系统预置至少8种茶叶示例数据（涵盖6大品类）
+  - 品鉴评分使用1-5分制，各维度独立评分
+
+notes: "后端茶道应用。重点验证：注册登录→茶叶录入→品鉴记录（多维度评分+冲泡参数）→冲泡计时→茶会邀约的完整业务闭环。"

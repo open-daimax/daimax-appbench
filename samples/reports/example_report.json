@@ -1,0 +1,199 @@
+{
+  "_comment": "SYNTHETIC EXAMPLE ONLY. All values below are mock data illustrating the shape of the report the tool produces (report/scores_summary.json). No real API keys, internal URLs, or proprietary data are present. The per-sample `scores` object is inlined here for readability; in a real run it lives in each sample's scores.json referenced by `scores_path`.",
+  "schema_version": "2.0",
+  "meta": {
+    "eval_version": "2.0",
+    "dataset_version": "V2",
+    "generator": "example-generator",
+    "platform": "web",
+    "complexity": "medium",
+    "sample_count": 1,
+    "run_id": "run-20260824-000000-example",
+    "start_time": "2026-08-24T10:00:00",
+    "end_time": "2026-08-24T10:07:30",
+    "total_duration_ms": 450000
+  },
+  "summary": {
+    "total_prompts": 1,
+    "total_test_cases": 5,
+    "total_passed": 4,
+    "total_failed": 1,
+    "overall_pass_rate": 80.0,
+    "per_platform_pass_rate": {
+      "web": 80.0
+    },
+    "per_category_pass_rate": {
+      "launch_check": 100.0,
+      "core_crud": 100.0,
+      "form_validation": 50.0,
+      "state_management": 100.0
+    },
+    "duration_statistics": {
+      "count": 1,
+      "mean_ms": 450000,
+      "min_ms": 450000,
+      "max_ms": 450000
+    },
+    "failure_rate_metrics": {
+      "total_samples": 1,
+      "generation_failure_count": 0,
+      "install_failure_count": 0,
+      "launch_failure_count": 0,
+      "generation_failure_rate": 0.0,
+      "install_failure_rate": 0.0,
+      "launch_failure_rate": 0.0,
+      "failure_reason_distribution": {
+        "feature_missing": 1
+      },
+      "failures": [
+        {
+          "item_id": "BookShelfDemo",
+          "platform": "web",
+          "category": "feature_missing",
+          "stage": "e2e",
+          "error_type": "",
+          "error_message": "TC003 add-book form did not persist the new book to the shelf"
+        }
+      ]
+    }
+  },
+  "top_level_summary": {
+    "sample_count": 1,
+    "mean_success_rate": 100.0,
+    "mean_functionality_completeness": 78.4,
+    "mean_experience": 92.0,
+    "per_platform": {
+      "web": {
+        "sample_count": 1,
+        "mean_success_rate": 100.0,
+        "mean_functionality_completeness": 78.4,
+        "mean_experience": 92.0,
+        "mean_duration_ms": 450000,
+        "mean_initial_generation_rate": 100.0,
+        "mean_usecase_completeness": 80.0,
+        "mean_stability_score": 100.0,
+        "mean_backend_completeness": 0,
+        "e2e_pass_rate": 80.0,
+        "e2e_pass": 4,
+        "e2e_count": 5,
+        "total_crashes": 0,
+        "total_anrs": 0,
+        "total_white_screens": 0,
+        "mean_token_total": 128000,
+        "mean_duration_score": 92.0,
+        "mean_aesthetics_score": 84.0
+      }
+    },
+    "mean_initial_generation_rate": 100.0,
+    "mean_issue_fix_rate": 0.0,
+    "mean_requirement_extension_rate": 0.0,
+    "mean_usecase_completeness": 80.0,
+    "mean_stability_score": 100.0,
+    "mean_backend_completeness": 0,
+    "mean_compliance_score": 70.0,
+    "e2e_pass_rate": 80.0,
+    "total_crashes": 0,
+    "total_anrs": 0,
+    "total_white_screens": 0,
+    "mean_duration_ms": 450000,
+    "mean_duration_score": 92.0,
+    "mean_aesthetics_score": 84.0,
+    "mean_token_total": 128000,
+    "total_token_input": 96000,
+    "total_token_output": 32000
+  },
+  "cross_platform_comparison": {},
+  "samples": [
+    {
+      "sample_id": "BookShelfDemo",
+      "sample_title": "个人读书清单",
+      "platforms": ["web"],
+      "scores_path": "BookShelfDemo/scores.json",
+      "scores": {
+        "sample_id": "BookShelfDemo",
+        "platforms": {
+          "web": {
+            "success_rate_score": 100.0,
+            "quality_score": 78.4,
+            "experience_score": 92.0,
+            "stability_score": 100.0,
+            "launch_screenshot": "BookShelfDemo/screenshots/web/launch.png",
+            "requires_backend": false,
+            "backend_completeness": null,
+            "backend_completeness_reason": "Sample does not require a backend; dimension skipped.",
+            "backend_requests": [],
+            "aesthetics_score": 84.0,
+            "aesthetics_reason": "Clean typographic hierarchy and consistent spacing; palette is coherent but slightly low-contrast on secondary text.",
+            "aesthetics_issues": [
+              "Secondary text contrast below recommended ratio on the stats page"
+            ],
+            "aesthetics_dimensions": {
+              "color_harmony": 8.5,
+              "layout": 8.8,
+              "visual_hierarchy": 8.0,
+              "typography": 8.5,
+              "professionalism": 8.0
+            },
+            "aesthetics_rule_version": "example-1.0",
+            "aesthetics_scored_frames": [
+              "BookShelfDemo/screenshots/web/shelf.png",
+              "BookShelfDemo/screenshots/web/detail.png"
+            ]
+          }
+        }
+      },
+      "e2e_test_cases": [
+        {
+          "test_case_id": "TC_LAUNCH",
+          "test_case_name": "启动验证",
+          "test_case_description": "验证应用可正常启动且首页非白屏",
+          "passed": true,
+          "status": "PASS",
+          "details": "App launched; home shelf rendered with 6 preset books.",
+          "report_path": "BookShelfDemo/e2e/web/TC_LAUNCH.html",
+          "duration": 4200
+        },
+        {
+          "test_case_id": "TC001",
+          "test_case_name": "按状态查看书架",
+          "test_case_description": "验证书架按 Reading/Finished/Want to read 分组展示",
+          "passed": true,
+          "status": "PASS",
+          "details": "Books correctly grouped by status.",
+          "report_path": "BookShelfDemo/e2e/web/TC001.html",
+          "duration": 6100
+        },
+        {
+          "test_case_id": "TC002",
+          "test_case_name": "更新阅读进度",
+          "test_case_description": "在详情页更新当前页并重新计算进度百分比",
+          "passed": true,
+          "status": "PASS",
+          "details": "Current page updated 120/300, progress recomputed to 40%.",
+          "report_path": "BookShelfDemo/e2e/web/TC002.html",
+          "duration": 7300
+        },
+        {
+          "test_case_id": "TC003",
+          "test_case_name": "新增书籍",
+          "test_case_description": "通过表单新增书籍并保存到书架",
+          "passed": false,
+          "status": "FAIL",
+          "details": "New book was entered but did not appear on the shelf after save; likely not persisted to localStorage.",
+          "report_path": "BookShelfDemo/e2e/web/TC003.html",
+          "duration": 8900
+        },
+        {
+          "test_case_id": "TC004",
+          "test_case_name": "阅读统计",
+          "test_case_description": "验证统计页按状态显示数量与本月已读页数",
+          "passed": true,
+          "status": "PASS",
+          "details": "Counts per status and monthly pages-read displayed correctly.",
+          "report_path": "BookShelfDemo/e2e/web/TC004.html",
+          "duration": 5600
+        }
+      ]
+    }
+  ]
+}

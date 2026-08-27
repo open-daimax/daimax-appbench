@@ -1,0 +1,28 @@
+# evalapp.yaml (minimal) — the smallest config that lets the evaluation tool run.
+#
+# Usage:
+#   cp samples/config/evalapp.yaml.minimal evalapp.yaml
+#   # then fill in the API keys below (or supply them via environment variables)
+#
+# For the full set of options (build/install tuning, external service, MCP, report), see
+# evalapp.yaml.example in the repo root. Config resolution order for every field is:
+#   evalapp.yaml (explicit) > environment variable > built-in default (see evalapp/config.py)
+#
+# NOTE: evalapp.yaml holds secrets and is gitignored — never commit your filled-in copy.
+
+# Target platforms to evaluate. Accepts any of: web, android, ios.
+platforms: [web]
+
+# AI model slots. Only two are needed for a basic run:
+#   - e2e:        vision model driving the Midscene E2E UI test (executes each step + asserts)
+#   - aesthetics: VL model that scores runtime screenshots for UI aesthetics
+# Any OpenAI-compatible endpoint works.
+models:
+  e2e:
+    api_key: ""    # E2E vision model API key — leave empty to use env var MIDSCENE_MODEL_API_KEY
+    base_url: ""   # OpenAI-compatible endpoint — leave empty to use env var MIDSCENE_MODEL_BASE_URL
+    name: ""       # Model name, e.g. gpt-4o — leave empty to use env var MIDSCENE_MODEL_NAME
+  aesthetics:
+    api_key: ""    # Aesthetics VL model API key — leave empty to use env var DASHSCOPE_API_KEY
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"  # default DashScope endpoint
+    name: "qwen-vl-max"  # default aesthetics model — override via env var AESTHETICS_MODEL

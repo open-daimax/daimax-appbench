@@ -1,0 +1,310 @@
+{
+  "prompt_id": "BirdWatching",
+  "platform": "default",
+  "dataset_version": "v2",
+  "test_cases": [
+    {
+      "id": "TC001",
+      "name": "用户注册与登录",
+      "description": "验证新用户注册和登录流程",
+      "steps": [
+        "打开应用，进入登录/注册页面 -> 预期: 显示邮箱+密码的登录和注册入口",
+        "使用邮箱123@qq.com密码12345678注册（若已注册则使用邮箱123@qq.com密码12345678登录） -> 预期: 登录成功",
+        "验证登录结果 -> 预期: 进入观测动态主页，显示观测记录列表"
+      ],
+      "expected_result": "用户成功注册并登录，进入观测动态主页",
+      "priority": "P0",
+      "category": "form_validation",
+      "functional_dimension": "authentication",
+      "page_level": "L3->L1",
+      "related_page": "登录/注册页"
+    },
+    {
+      "id": "TC002",
+      "name": "添加观测记录",
+      "description": "验证填写观测信息保存后出现在动态列表",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "点击右上角'+'按钮 -> 预期: 进入添加观测记录页面",
+        "填写观测表单（选择鸟种、数量、行为类型、环境类型、地点、日期）并保存 -> 预期: 保存成功，返回观测动态页",
+        "验证列表 -> 预期: 新添加的观测记录出现在动态列表顶部"
+      ],
+      "expected_result": "观测记录添加成功并显示在动态列表",
+      "priority": "P0",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L1->L3",
+      "related_page": "添加观测记录"
+    },
+    {
+      "id": "TC003",
+      "name": "编辑观测记录",
+      "description": "验证在观测详情页编辑已有记录",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "点击任意一条观测记录 -> 预期: 进入观测详情页，显示编辑按钮",
+        "点击编辑按钮 -> 预期: 进入编辑状态，表单预填原有数据",
+        "修改任意字段并保存 -> 预期: 保存成功，返回详情页",
+        "验证详情页 -> 预期: 显示更新后的数据"
+      ],
+      "expected_result": "观测记录编辑成功，详情页显示更新后的数据",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L1->L2",
+      "related_page": "观测详情"
+    },
+    {
+      "id": "TC004",
+      "name": "删除观测记录",
+      "description": "验证在观测详情页删除记录后从列表移除",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "点击任意一条观测记录 -> 预期: 进入观测详情页，显示删除按钮",
+        "点击删除按钮并确认删除 -> 预期: 删除成功，返回观测动态页",
+        "验证列表 -> 预期: 该记录已从列表中移除"
+      ],
+      "expected_result": "观测记录删除成功，从列表中消失",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_modification",
+      "page_level": "L1->L2",
+      "related_page": "观测详情"
+    },
+    {
+      "id": "TC005",
+      "name": "图鉴搜索鸟种",
+      "description": "验证在鸟类图鉴页通过名称搜索鸟种",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 切换到鸟类图鉴Tab -> 预期: 显示鸟种列表",
+        "在搜索栏输入任意鸟种名称 -> 预期: 实时显示匹配结果",
+        "验证搜索结果 -> 预期: 仅显示名称匹配的鸟种",
+        "清空搜索 -> 预期: 恢复显示全部鸟种"
+      ],
+      "expected_result": "搜索功能正常，能按名称过滤鸟种列表",
+      "priority": "P0",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "鸟类图鉴"
+    },
+    {
+      "id": "TC006",
+      "name": "图鉴分类筛选",
+      "description": "验证在鸟类图鉴页按科目分类筛选",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 切换到鸟类图鉴Tab -> 预期: 显示鸟种列表和分类筛选",
+        "选择某一分类进行筛选 -> 预期: 仅显示该分类下的鸟种",
+        "验证筛选结果 -> 预期: 列表内容与所选分类一致",
+        "切换为全部 -> 预期: 恢复显示所有鸟种"
+      ],
+      "expected_result": "图鉴按分类筛选功能正常",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1",
+      "related_page": "鸟类图鉴"
+    },
+    {
+      "id": "TC007",
+      "name": "鸟种详情页展示",
+      "description": "验证鸟种详情页展示完整信息和季节分布",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 切换到鸟类图鉴Tab -> 预期: 显示鸟种列表",
+        "点击任意鸟种 -> 预期: 进入鸟种详情页",
+        "验证详情内容 -> 预期: 显示鸟种大图、基本信息（中文名、拉丁学名、科属、保护级别）、形态特征、栖息环境和分布区域",
+        "验证季节分布和观测次数 -> 预期: 显示季节分布图表（春/夏/秋/冬出现频率）和我的观测次数统计"
+      ],
+      "expected_result": "鸟种详情页完整展示基本信息、形态特征、栖息环境、季节分布图表和观测次数",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "data_view",
+      "page_level": "L1->L2",
+      "related_page": "鸟种详情"
+    },
+    {
+      "id": "TC008",
+      "name": "观测触发成就解锁",
+      "description": "验证添加观测后成就自动解锁",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "点击'+'按钮进入添加观测记录页 -> 预期: 显示添加表单",
+        "填写观测表单并保存 -> 预期: 保存成功，返回观测动态页",
+        "切换到成就系统Tab -> 预期: '初次观测'徽章显示为已解锁状态"
+      ],
+      "expected_result": "添加观测记录后，'初次观测'成就徽章自动解锁",
+      "priority": "P0",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L1->L3->L1",
+      "related_page": "成就系统"
+    },
+    {
+      "id": "TC009",
+      "name": "成就进度信息展示",
+      "description": "验证添加观测后成就进度信息正确更新",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "点击'+'按钮进入添加观测记录页 -> 预期: 显示添加表单",
+        "填写观测表单并保存 -> 预期: 保存成功，返回观测动态页",
+        "切换到成就系统Tab -> 预期: 成就进度信息正确显示（如'已观测X/N种'），反映新增的观测记录"
+      ],
+      "expected_result": "添加观测后成就进度信息正确更新并显示",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L1->L3->L1",
+      "related_page": "成就系统"
+    },
+    {
+      "id": "TC010",
+      "name": "成就详情页展示",
+      "description": "验证成就详情页展示完整信息",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 切换到成就系统Tab -> 预期: 显示成就徽章网格",
+        "点击任意一个成就徽章 -> 预期: 进入成就详情页",
+        "验证详情内容 -> 预期: 显示徽章大图、名称、描述、解锁条件和当前进度",
+        "验证解锁时间 -> 预期: 已解锁的成就显示解锁时间"
+      ],
+      "expected_result": "成就详情页完整展示徽章信息、解锁条件和进度",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "data_view",
+      "page_level": "L1->L2",
+      "related_page": "成就详情"
+    },
+    {
+      "id": "TC011",
+      "name": "设置目标鸟种",
+      "description": "验证从图鉴中设置目标鸟种并追踪",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入我的页 -> 预期: 显示个人中心和目标鸟种入口",
+        "点击目标鸟种入口 -> 预期: 进入设置目标鸟种页",
+        "从图鉴列表中选择任意鸟种设为目标 -> 预期: 添加成功",
+        "验证已设定目标列表 -> 预期: 刚选择的鸟种出现在目标列表中"
+      ],
+      "expected_result": "目标鸟种设置成功并显示在目标列表",
+      "priority": "P1",
+      "category": "core_crud",
+      "functional_dimension": "data_creation",
+      "page_level": "L1->L3",
+      "related_page": "设置目标鸟种"
+    },
+    {
+      "id": "TC012",
+      "name": "目标鸟种观测后标记完成",
+      "description": "验证设定目标鸟种后观测到该鸟种时自动标记为已完成",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页",
+        "进入我的页，点击目标鸟种入口，从图鉴中选择任意鸟种设为目标 -> 预期: 目标鸟种设置成功",
+        "切换到观测动态主页，点击'+'按钮进入添加观测记录页 -> 预期: 显示添加表单",
+        "选择已设为目标鸟种的鸟种，填写观测表单并保存 -> 预期: 保存成功，返回观测动态页",
+        "进入目标鸟种列表 -> 预期: 该目标鸟种标记为'已完成'"
+      ],
+      "expected_result": "观测到目标鸟种后，目标列表中该鸟种自动标记为'已完成'",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L1->L3->L1",
+      "related_page": "设置目标鸟种"
+    },
+    {
+      "id": "TC013",
+      "name": "我的记录页与筛选",
+      "description": "验证我的记录页展示个人观测并支持按鸟种筛选",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "点击'+'按钮进入添加观测记录页 -> 预期: 显示添加表单",
+        "填写观测表单并保存 -> 预期: 保存成功，返回观测动态页",
+        "切换到我的Tab，点击我的记录入口 -> 预期: 进入我的记录页，显示个人观测记录列表",
+        "使用鸟种筛选功能 -> 预期: 筛选结果仅包含所选鸟种的观测记录"
+      ],
+      "expected_result": "我的记录页正常展示并支持按鸟种筛选",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1->L3->L1->L2",
+      "related_page": "我的记录"
+    },
+    {
+      "id": "TC014",
+      "name": "个人统计数据展示",
+      "description": "验证我的页统计数据正确显示",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 切换到我的Tab -> 预期: 进入我的页面",
+        "验证用户信息 -> 预期: 显示用户头像和昵称",
+        "验证统计数据 -> 预期: 显示总观测次数、观测鸟种数、解锁成就数"
+      ],
+      "expected_result": "我的页正确显示用户信息和统计数据（总观测次数、观测鸟种数、解锁成就数）",
+      "priority": "P1",
+      "category": "state_management",
+      "functional_dimension": "state_management",
+      "page_level": "L1",
+      "related_page": "我的"
+    },
+    {
+      "id": "TC015",
+      "name": "观测记录时间倒序排列",
+      "description": "验证观测动态列表按时间倒序排列，最新记录在最前",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "点击'+'按钮进入添加观测记录页 -> 预期: 显示添加表单",
+        "填写观测表单并保存 -> 预期: 保存成功，返回观测动态页",
+        "验证列表顺序 -> 预期: 新添加的观测记录出现在列表顶部（时间倒序）"
+      ],
+      "expected_result": "观测动态列表按时间倒序排列，最新记录在最前",
+      "priority": "P1",
+      "category": "search_filter",
+      "functional_dimension": "search_filter",
+      "page_level": "L1->L3->L1",
+      "related_page": "观测动态"
+    },
+    {
+      "id": "TC016",
+      "name": "发现页内容展示",
+      "description": "验证发现页展示季节推荐和观测资讯",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 切换到发现Tab -> 预期: 进入发现页",
+        "验证页面内容 -> 预期: 显示当季推荐观测鸟种、热门观测地点推荐和观测小知识卡片"
+      ],
+      "expected_result": "发现页正确展示季节推荐、热门地点和观测知识",
+      "priority": "P1",
+      "category": "navigation",
+      "functional_dimension": "data_view",
+      "page_level": "L1",
+      "related_page": "发现"
+    },
+    {
+      "id": "TC017",
+      "name": "预置数据展示验证",
+      "description": "验证系统预置的示例观测记录和鸟类图鉴数据",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 进入观测动态主页 -> 预期: 显示观测记录列表",
+        "验证预置观测记录 -> 预期: 列表中包含系统预置的示例观测记录",
+        "切换到鸟类图鉴Tab -> 预期: 鸟种列表显示预置鸟类数据（至少10种）"
+      ],
+      "expected_result": "系统预置的示例观测记录和鸟类图鉴数据正确展示",
+      "priority": "P1",
+      "category": "boundary_exception",
+      "functional_dimension": "data_view",
+      "page_level": "L1",
+      "related_page": "观测动态"
+    },
+    {
+      "id": "TC018",
+      "name": "退出登录",
+      "description": "验证用户退出登录后返回登录页",
+      "steps": [
+        "如当前为登录页，使用邮箱123@qq.com密码12345678登录 -> 预期: 切换到我的Tab -> 预期: 进入我的页面",
+        "点击退出登录 -> 预期: 退出成功",
+        "验证退出结果 -> 预期: 返回登录/注册页面"
+      ],
+      "expected_result": "用户成功退出登录，返回登录/注册页面",
+      "priority": "P1",
+      "category": "form_validation",
+      "functional_dimension": "authentication",
+      "page_level": "L1->L3",
+      "related_page": "我的"
+    }
+  ]
+}

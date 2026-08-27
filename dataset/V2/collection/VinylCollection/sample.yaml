@@ -1,0 +1,119 @@
+version: "2.0"
+sample_id: VinylCollection
+title: 黑胶唱片收藏
+app_type: 收藏鉴赏
+dataset_version: "V2"
+complexity: high
+requires_backend: true
+requires_auth: true
+
+requirement: |
+  实现一个黑胶唱片收藏管理应用，面向黑胶爱好者提供唱片入库、品相评级、播放记录追踪和交换意向管理等功能：
+
+  【我的唱片库】
+  唱片库首页以网格/列表形式展示用户已收藏的所有唱片，每张唱片显示封面、专辑名、艺术家、品相等级。
+  支持按风格（爵士、摇滚、古典、电子等）筛选，按入库时间/品相排序。系统预置至少5张示例唱片。
+
+  【唱片详情与品相评级】
+  唱片详情页展示封面大图、专辑名、艺术家、厂牌、发行年份、风格标签、品相等级（M/NM/VG+/VG/G+/G/F/P）、
+  个人备注。用户可对唱片品相进行评级，记录唱片盘面和封套品相。
+
+  【播放记录】
+  用户可为每张唱片记录播放日期和感受备注，形成个人播放日志。播放记录按时间倒序展示，
+  可在唱片详情页查看该唱片的播放历史，也可在独立的播放记录Tab查看全部播放时间线。
+
+  【交换广场】
+  用户可将唱片标记为"可交换"状态并设置交换意向（想要的风格/唱片），
+  交换广场展示所有用户发布的可交换唱片。用户可对感兴趣的唱片发起交换请求，
+  双方通过接受/拒绝来完成交换流程。
+
+  【统计分析】
+  统计页展示收藏概览：总唱片数、风格分布饼图、品相分布、最近播放频率、
+  本月新增唱片数等数据可视化内容。
+
+pages:
+  - name: "我的唱片库"
+    level: L1
+    description: "唱片收藏主页，网格展示所有唱片，支持筛选排序"
+  - name: "分类浏览"
+    level: L1
+    description: "按风格/年代/厂牌分类浏览唱片"
+  - name: "交换广场"
+    level: L1
+    description: "展示所有可交换唱片，浏览和发起交换"
+  - name: "统计"
+    level: L1
+    description: "收藏数据统计与可视化分析"
+  - name: "个人中心"
+    level: L1
+    description: "用户信息、设置和播放记录入口"
+  - name: "唱片详情"
+    level: L2
+    description: "唱片完整信息展示，含品相、播放记录入口"
+    entry_from: "我的唱片库"
+  - name: "播放记录"
+    level: L2
+    description: "全部播放时间线，按日期倒序展示"
+    entry_from: "个人中心"
+  - name: "心愿单"
+    level: L2
+    description: "想要收藏的唱片愿望清单"
+    entry_from: "个人中心"
+  - name: "分类结果"
+    level: L2
+    description: "某分类下的唱片列表"
+    entry_from: "分类浏览"
+  - name: "交换详情"
+    level: L2
+    description: "交换请求详情，含双方唱片信息和状态"
+    entry_from: "交换广场"
+  - name: "添加唱片"
+    level: L3
+    description: "新唱片入库表单，填写完整唱片信息"
+    entry_from: "我的唱片库"
+  - name: "编辑唱片"
+    level: L3
+    description: "修改已有唱片信息和品相评级"
+    entry_from: "唱片详情"
+  - name: "发起交换"
+    level: L3
+    description: "选择己方唱片并提交交换请求"
+    entry_from: "交换详情"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - name: "唱片库"
+      icon: "album"
+      page: "我的唱片库"
+    - name: "分类"
+      icon: "category"
+      page: "分类浏览"
+    - name: "交换"
+      icon: "swap-horizontal"
+      page: "交换广场"
+    - name: "统计"
+      icon: "bar-chart"
+      page: "统计"
+    - name: "我的"
+      icon: "person"
+      page: "个人中心"
+
+core_functions:
+  - 唱片入库与封面上传
+  - 品相评级（盘面+封套双维度）
+  - 播放记录追踪与时间线展示
+  - 交换意向发布与交换流程管理
+  - 风格/年代/厂牌多维分类浏览
+  - 收藏统计与数据可视化
+  - 心愿单管理
+  - 唱片搜索与筛选
+
+constraints:
+  - 需使用真实的后端应用
+  - 品相等级采用国际通用Goldmine标准（M/NM/VG+/VG/G+/G/F/P）
+  - 交换流程为异步模式，发起后等待对方响应
+  - 系统预置至少5张示例唱片数据供首页展示
+  - 用户只能管理自己的唱片和交换请求（RLS隔离）
+
+notes: "E2E测试重点关注唱片CRUD完整闭环、品相评级交互、交换请求状态流转、播放记录跨页同步"

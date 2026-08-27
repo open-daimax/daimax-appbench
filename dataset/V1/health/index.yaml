@@ -1,0 +1,33 @@
+version: "1.0"
+name: "健康类应用评测样本集"
+description: |
+  健康类应用评测样本集,专注于评估AI生成健康管理类应用的能力。
+  覆盖步数计数、饮食记录、用药提醒等健康管理场景。
+  用于评测传感器集成、数据统计、健康数据展示等专项能力。
+
+# 样本文件索引
+samples_index:
+  - dir: StepCounter
+    sample_id: StepCounter
+    title: 步数计数器
+    app_category: 运动健康
+    dataset_version: "v2"
+    status: active
+
+  - dir: FoodDiary
+    sample_id: FoodDiary
+    title: 饮食记录
+    app_category: 营养健康
+    dataset_version: "v2"
+    status: active
+
+  - dir: MedicineReminder
+    sample_id: MedicineReminder
+    title: 用药提醒
+    app_category: 健康管理
+    dataset_version: "v2"
+    status: active
+
+# 版本信息
+created_at: "2026-05-11"
+status: active

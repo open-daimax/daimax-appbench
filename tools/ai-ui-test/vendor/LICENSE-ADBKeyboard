@@ -1,0 +1,44 @@
+ADBKeyBoard (modified) - GPLv2 License
+
+Copyright (C) 2015 senzhk (https://github.com/senzhk/ADBKeyBoard)
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2 of the License, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, see <https://www.gnu.org/licenses/>.
+
+---------------------------------------------------------------------------
+
+Modification Notice
+===================
+
+This APK (ADBKeyBoard.apk) is a modified build of senzhk/ADBKeyBoard
+(https://github.com/senzhk/ADBKeyBoard), an Android input method (IME) that
+accepts text input via ADB broadcasts.
+
+Modification: Deep-link input support
+--------------------------------------
+In addition to the original broadcast-based input mechanism, this modified
+version adds support for receiving text input through a deep link (intent)
+of the form:
+
+    adbkeyboard://input?b64=<base64-encoded-text>
+
+This allows automation frameworks (such as Maestro's `openLink` command) to
+inject text into the active input field via an ADB deep-link intent, without
+relying solely on the broadcast mechanism.
+
+The deep-link path decodes the base64 payload from the query string and
+forwards it to the same AdbIME text-input handler used by the original
+broadcast flow.
+
+All modifications are released under the same GPLv2 license as the original
+project.

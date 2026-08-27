@@ -1,0 +1,35 @@
+version: "1.0"
+sample_id: DrawGuess
+title: 你画我猜
+app_type: 游戏
+game_category: 互动类
+dataset_version: "v1"
+status: deprecated
+deprecated_reason: "对战类，需多人实时协同"
+requires_backend: true
+requires_auth: true
+
+requirement: |
+  实现一个你画我猜多人实时互动游戏:
+  1. 房间系统:玩家可创建房间或通过房间号加入房间,房间内显示当前玩家列表
+  2. 实时画板:画手在画板上绘制,其他玩家实时看到画笔轨迹同步
+  3. 猜词机制:非画手玩家在输入框提交猜测答案,系统自动判定是否正确
+  4. 计分系统:猜对者与画手均获得分数,先猜对者得分更高
+  5. 轮次切换:每轮画手轮换,每局多轮,局结束显示总分排名
+  6. 词库:内置中文词库,画手每轮可从3个候选词中选择1个
+
+core_functions:
+  - 创建/加入房间
+  - 实时画板数据同步(画笔轨迹)
+  - 猜词提交与自动判定
+  - 计分与排名
+  - 轮次切换与画手轮换
+  - 房间内玩家列表
+
+constraints:
+  - 需要使用后端实时服务实现画板数据实时同步
+  - 需要用户登录注册功能
+  - 画板使用 Canvas 实现
+  - 词库内置至少50个常用词
+
+notes: "测试后端的实时数据同步能力:画笔轨迹实时广播、房间状态变更推送、多玩家并发互动。重点验证 realtime channel 的 broadcast 和 presence 功能。"

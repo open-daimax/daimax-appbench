@@ -1,0 +1,142 @@
+version: "2.0"
+sample_id: CraftBeerLog
+title: 精酿啤酒品鉴
+app_type: 饮品酿造
+dataset_version: "V2"
+complexity: high
+requires_backend: true
+requires_auth: true
+
+requirement: |
+  实现一个精酿啤酒品鉴应用，为精酿爱好者提供酒款品鉴、风格分类、酒厂档案与评分排行功能：
+
+  【品鉴首页】
+  1. 顶部搜索栏：支持按酒款名称、酒厂、风格搜索
+  2. 最新品鉴动态卡片：展示最近的品鉴记录（酒款图片、名称、评分、品鉴者）
+  3. 热门酒款推荐区：高评分酒款展示
+  4. 系统预置至少10款示例精酿啤酒数据
+
+  【风格图谱Tab】
+  5. 啤酒风格分类网格展示：IPA/Stout/Lager/Wheat/Sour/Porter等
+  6. 每个风格显示名称、代表色、简介、酒款数量
+  7. 点击风格进入该风格酒款列表
+  8. 风格列表支持按评分/酒精度排序
+
+  【酒厂档案Tab】
+  9. 酒厂卡片列表：显示酒厂名称、所在地、Logo、酒款数量
+  10. 支持按地区筛选（国内/进口/全部）
+  11. 点击酒厂进入酒厂详情：显示简介、代表作品列表
+
+  【排行榜Tab】
+  12. 综合评分排行：按平均分排序的酒款列表
+  13. 显示排名、酒款名称、评分、品鉴次数
+  14. 支持切换排行维度（综合/外观/香气/口感）
+  15. TOP10以内显示排名徽章
+
+  【我的Tab】
+  16. 个人信息展示：头像、昵称、品鉴总数、收藏数
+  17. 我的品鉴记录列表入口
+  18. 收藏酒款入口
+  19. 搜索历史
+  20. 退出登录
+
+  【酒款详情页】
+  21. 酒款完整信息：名称、风格、酒厂、酒精度(ABV)、苦度(IBU)、描述
+  22. 该酒款所有品鉴记录列表
+  23. 平均评分展示
+  24. 收藏/取消收藏按钮
+  25. 添加品鉴记录入口
+
+  【添加品鉴记录】
+  26. 选择/搜索品鉴酒款
+  27. 四维评分：外观(颜色/泡沫) / 香气(麦芽/酒花/酵母) / 口感(酒体/碳酸/平衡) / 回味(持久度/愉悦度)，各1-5分
+  28. 文字品鉴笔记
+  29. 保存品鉴记录
+
+pages:
+  - name: "品鉴首页"
+    level: "L1"
+    description: "最新品鉴动态与热门酒款推荐"
+    entry_from: "底部Tab-品鉴"
+  - name: "风格图谱"
+    level: "L1"
+    description: "啤酒风格分类网格与导航"
+    entry_from: "底部Tab-风格"
+  - name: "酒厂档案"
+    level: "L1"
+    description: "酒厂列表浏览与地区筛选"
+    entry_from: "底部Tab-酒厂"
+  - name: "排行榜"
+    level: "L1"
+    description: "酒款评分排行与维度切换"
+    entry_from: "底部Tab-排行"
+  - name: "我的"
+    level: "L1"
+    description: "个人信息、品鉴记录与收藏管理"
+    entry_from: "底部Tab-我的"
+  - name: "酒款详情"
+    level: "L2"
+    description: "酒款完整信息与品鉴记录"
+    entry_from: "品鉴首页/风格列表/排行榜-点击酒款"
+  - name: "风格酒款列表"
+    level: "L2"
+    description: "某风格下所有酒款"
+    entry_from: "风格图谱-点击风格卡片"
+  - name: "酒厂详情"
+    level: "L2"
+    description: "酒厂简介与代表作品"
+    entry_from: "酒厂档案-点击酒厂卡片"
+  - name: "品鉴笔记列表"
+    level: "L2"
+    description: "个人品鉴记录列表"
+    entry_from: "我的-品鉴记录入口"
+  - name: "搜索结果"
+    level: "L2"
+    description: "搜索匹配的酒款列表"
+    entry_from: "品鉴首页-搜索栏"
+  - name: "注册登录"
+    level: "L3"
+    description: "用户注册与登录"
+    entry_from: "应用启动/我的页面"
+  - name: "添加品鉴"
+    level: "L3"
+    description: "创建品鉴记录表单"
+    entry_from: "酒款详情-添加品鉴按钮/我的-新建"
+  - name: "评分打分"
+    level: "L3"
+    description: "四维度评分操作界面"
+    entry_from: "添加品鉴-评分步骤"
+  - name: "编辑笔记"
+    level: "L3"
+    description: "品鉴文字笔记编辑"
+    entry_from: "添加品鉴-笔记步骤"
+  - name: "收藏管理"
+    level: "L3"
+    description: "收藏酒款列表与取消收藏"
+    entry_from: "我的-收藏入口"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - { name: "品鉴", icon: "beer", page: "品鉴首页" }
+    - { name: "风格", icon: "grid", page: "风格图谱" }
+    - { name: "酒厂", icon: "building", page: "酒厂档案" }
+    - { name: "排行", icon: "trophy", page: "排行榜" }
+    - { name: "我的", icon: "user", page: "我的" }
+
+core_functions:
+  - 酒款浏览与搜索
+  - 风格分类导航
+  - 品鉴记录（四维度评分+笔记）
+  - 酒厂档案管理
+  - 评分排行榜（多维度切换）
+  - 收藏管理
+
+constraints:
+  - 需使用真实的后端应用
+  - 后端通过权限控制确保用户品鉴数据隔离
+  - 系统预置至少10款精酿啤酒数据（涵盖6种以上风格）
+  - 评分使用1-5分制，四维度独立评分，综合分为平均值
+  - 排行榜至少展示品鉴次数≥1的酒款
+
+notes: "后端精酿品鉴应用。重点验证：注册→发现酒款→添加品鉴（四维度评分）→排行榜对比→收藏管理的完整闭环。"

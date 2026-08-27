@@ -1,0 +1,62 @@
+version: "1.0"
+name: "生活方式类应用评测样本集"
+description: |
+  生活方式与兴趣指南类应用评测样本集。
+  覆盖咖啡制作、菜谱浏览、滑雪场指南、烹饪记录、咖啡品鉴等生活场景。
+  用于评测信息展示、分类浏览、数据CRUD完整性、用户自产内容管理等能力。
+
+# 样本文件索引
+samples_index:
+  - dir: CoffeeGuide
+    sample_id: CoffeeGuide
+    title: 咖啡制作指南
+    app_category: 生活
+    dataset_version: "v2"
+    status: active
+
+  - dir: RecipeBook
+    sample_id: RecipeBook
+    title: 家常菜谱
+    app_category: 生活
+    dataset_version: "v2"
+    status: active
+
+  - dir: SkiResort
+    sample_id: SkiResort
+    title: 滑雪场指南
+    app_category: 生活
+    dataset_version: "v2"
+    status: active
+
+  - dir: CookingDiary
+    sample_id: CookingDiary
+    title: 烹饪日记
+    app_category: 生活
+    dataset_version: "v2"
+    status: active
+
+  - dir: CoffeeLog
+    sample_id: CoffeeLog
+    title: 咖啡品鉴记录
+    app_category: 生活
+    dataset_version: "v2"
+    status: active
+
+  - dir: PhotoGallery
+    sample_id: PhotoGallery
+    title: 图片画廊
+    app_category: 生活
+    dataset_version: "v2"
+    status: active
+
+  - dir: MoodCard
+    sample_id: MoodCard
+    title: 今日心情卡片
+    app_category: 生活
+    dataset_version: "v2"
+    status: active
+
+# 版本信息
+created_at: "2026-07-06"
+updated_at: "2026-07-14"
+status: active

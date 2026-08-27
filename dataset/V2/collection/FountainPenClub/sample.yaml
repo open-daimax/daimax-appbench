@@ -1,0 +1,138 @@
+version: "2.0"
+sample_id: "FountainPenClub"
+title: "钢笔收藏俱乐部"
+app_type: 收藏
+dataset_version: "V2"
+complexity: high
+requires_backend: true
+requires_auth: true
+
+requirement: |
+  实现一个钢笔收藏俱乐部应用，为钢笔爱好者提供完整的收藏管理、墨水试色记录、书写样本分享和交换交易功能：
+
+  【我的收藏】
+  1. 展示用户钢笔收藏列表，每支钢笔显示品牌、型号、笔尖规格、购入价格和缩略图
+  2. 支持按品牌/笔尖类型/价格区间筛选
+  3. 点击进入钢笔详情页，显示完整参数、购入渠道、使用状态和维修记录
+
+  【墨水色卡】
+  4. 展示墨水色卡瀑布流，每个色卡显示墨水名称、品牌、色系标签和试色图片
+  5. 支持按色系（蓝/黑/红/绿/棕/彩墨）分类筛选
+  6. 点击进入墨水详情页，显示详细属性（防水性、流动性、干燥时间）和用户评分
+
+  【书写样本】
+  7. 展示用户上传的书写样本图片墙，每个样本标注使用的钢笔和墨水组合
+  8. 点击查看样本大图和详细描述
+  9. 支持上传新书写样本，关联已有钢笔和墨水
+
+  【交换市场】
+  10. 展示用户发布的钢笔/墨水交换帖，显示物品名称、成色、期望交换物和状态
+  11. 支持发起交换请求，填写己方提供物品信息
+  12. 交换状态流转：发布中→有人请求→达成意向→交易完成
+  13. 已完成交换显示双方评价
+
+  【维修记录】
+  14. 记录钢笔维修历史，包含维修项目、费用、维修前后照片
+  15. 关联具体钢笔档案
+
+  【个人中心】
+  16. 显示收藏统计（钢笔数/墨水数/样本数）
+  17. 交换记录和信用评分
+  18. 账号设置与退出登录
+
+pages:
+  - name: "我的收藏"
+    level: L1
+    description: "钢笔收藏列表，支持筛选和搜索"
+
+  - name: "墨水色卡"
+    level: L1
+    description: "墨水色卡瀑布流展示，按色系分类"
+
+  - name: "书写样本"
+    level: L1
+    description: "书写样本图片墙，展示钢笔墨水组合效果"
+
+  - name: "交换市场"
+    level: L1
+    description: "钢笔墨水交换帖列表，支持发布和请求"
+
+  - name: "个人中心"
+    level: L1
+    description: "用户收藏统计、交换记录和设置"
+
+  - name: "钢笔详情"
+    level: L2
+    description: "钢笔完整参数、使用状态和维修历史"
+    entry_from: "我的收藏"
+
+  - name: "墨水详情"
+    level: L2
+    description: "墨水详细属性、试色效果和用户评分"
+    entry_from: "墨水色卡"
+
+  - name: "样本详情"
+    level: L2
+    description: "书写样本大图、使用的钢笔墨水信息"
+    entry_from: "书写样本"
+
+  - name: "交换详情"
+    level: L2
+    description: "交换帖详情、请求列表和状态流转"
+    entry_from: "交换市场"
+
+  - name: "维修记录"
+    level: L2
+    description: "钢笔维修历史列表"
+    entry_from: "钢笔详情"
+
+  - name: "添加钢笔"
+    level: L3
+    description: "录入新钢笔信息表单"
+    entry_from: "我的收藏"
+
+  - name: "添加墨水试色"
+    level: L3
+    description: "录入墨水试色记录表单"
+    entry_from: "墨水色卡"
+
+  - name: "上传书写样本"
+    level: L3
+    description: "上传样本图片并关联钢笔和墨水"
+    entry_from: "书写样本"
+
+  - name: "添加维修记录"
+    level: L3
+    description: "录入钢笔维修项目和费用"
+    entry_from: "维修记录"
+
+  - name: "发起交换"
+    level: L3
+    description: "发布交换帖或发起交换请求"
+    entry_from: "交换市场"
+
+navigation:
+  type: bottom_tab
+  tabs:
+    - { name: "收藏", icon: "pen-tool", page: "我的收藏" }
+    - { name: "墨水", icon: "droplet", page: "墨水色卡" }
+    - { name: "样本", icon: "image", page: "书写样本" }
+    - { name: "交换", icon: "repeat", page: "交换市场" }
+    - { name: "我的", icon: "user", page: "个人中心" }
+
+core_functions:
+  - 钢笔档案CRUD与筛选
+  - 墨水试色记录与色系分类
+  - 书写样本上传与钢笔墨水关联
+  - 交换帖发布与状态流转
+  - 维修记录管理
+  - 收藏统计与信用评分
+
+constraints:
+  - 需使用真实的后端应用
+  - 交换交易为线下完成，应用仅记录状态
+  - 系统预置3支钢笔和5种墨水数据供展示
+  - 用户只能管理自己的收藏和交换帖（RLS隔离）
+  - 信用评分基于完成交换次数自动计算
+
+notes: "E2E测试重点：钢笔录入→墨水试色→上传书写样本→发起交换→完成交易的完整业务闭环"

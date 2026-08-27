@@ -1,0 +1,37 @@
+{
+  "version": "2.0",
+  "sample_id": "BookShelfDemo",
+  "title": "个人读书清单",
+  "app_type": "阅读记录",
+  "dataset_version": "V2",
+  "complexity": "medium",
+  "requires_backend": false,
+  "requires_auth": false,
+  "requirement": "Build a personal reading-tracker app that lets a reader manage a book shelf, log reading progress, and take notes.\n\n[Shelf Tab]\n1. Book list grouped by status (Reading / Finished / Want to read)\n2. Each item shows cover placeholder, title, author, and progress percentage\n3. Tap a book to open its detail page\n4. Preload at least 6 sample books\n\n[Detail Page]\n5. Show title, author, total pages, current page, and status\n6. Update current page and recompute progress percentage\n7. List of reading notes attached to the book\n\n[Add Book]\n8. Form to enter title, author, total pages, and initial status\n9. Save the new book back to the shelf\n\n[Stats Tab]\n10. Show counts per status and total pages read this month",
+  "pages": [
+    { "name": "书架列表", "level": "L1", "description": "按状态分组展示书籍", "entry_from": "底部Tab-书架" },
+    { "name": "统计", "level": "L1", "description": "阅读数量与页数统计", "entry_from": "底部Tab-统计" },
+    { "name": "书籍详情", "level": "L2", "description": "书籍信息、进度与笔记", "entry_from": "书架列表-点击书籍" },
+    { "name": "新增书籍", "level": "L3", "description": "录入书籍信息的表单", "entry_from": "书架列表-新增按钮" }
+  ],
+  "navigation": {
+    "type": "bottom_tab",
+    "tabs": [
+      { "name": "书架", "icon": "book", "page": "书架列表" },
+      { "name": "统计", "icon": "bar-chart", "page": "统计" }
+    ]
+  },
+  "core_functions": [
+    "书籍列表与状态分组",
+    "阅读进度更新与百分比计算",
+    "读书笔记管理",
+    "新增书籍",
+    "阅读统计"
+  ],
+  "constraints": [
+    "纯前端应用，数据存储使用localStorage",
+    "进度百分比 = 当前页 / 总页数 × 100，四舍五入到整数",
+    "预置至少6本示例书籍，覆盖三种状态"
+  ],
+  "notes": "This is synthetic example data for demonstration only. Verifies the shelf -> detail -> update-progress -> add-note flow end to end."
+}
