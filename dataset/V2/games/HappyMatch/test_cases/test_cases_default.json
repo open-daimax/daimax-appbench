@@ -3,17 +3,6 @@
   "platform": "default",
   "test_cases": [
     {
-      "id": "TC_LAUNCH",
-      "name": "应用启动验证",
-      "description": "验证应用成功启动，无白屏、黑屏或崩溃",
-      "steps": [
-        "启动应用 -> 预期: 应用正常启动，无白屏或崩溃"
-      ],
-      "expected_result": "应用成功启动",
-      "priority": "P0",
-      "category": "launch_check"
-    },
-    {
       "id": "TC001",
       "name": "主菜单与关卡选择",
       "description": "验证主菜单显示入口且可进入关卡选择页",

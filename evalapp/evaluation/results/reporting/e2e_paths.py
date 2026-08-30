@@ -1,8 +1,8 @@
 """E2E 报告路径解析：把绝对路径 report_path 改写为工作区根目录相对路径。
 
 report.html 位于工作区根目录，本地报告直接以相对路径打开 e2e 报告文件；
-Web 控制台的 /e2e-report/{path} 端点也按同一语义解析（见
-studio/backend/evalstudio/workspace/report_loader.py:resolve_e2e_report_file）。
+Web 控制台的 /e2e-report/{path} 端点也按同一语义解析（控制台独立部署，
+其 report_loader 中的 resolve_e2e_report_file 遵循同一约定）。
 
 工作区存在两种 e2e 报告布局，导出目录名的构成不同：
 

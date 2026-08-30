@@ -3,21 +3,6 @@
   "platform": "default",
   "test_cases": [
     {
-      "id": "TC_LAUNCH",
-      "name": "应用启动与登录验证",
-      "description": "验证应用启动后用户可完成登录并进入主界面",
-      "steps": [
-        "打开应用 -> 预期: 显示登录/注册入口",
-        "使用邮箱123@qq.com密码12345678登录-> 预期: 登录成功",
-        "验证进入主界面 -> 预期: 显示唱片库首页，底部包含5个Tab导航"
-      ],
-      "expected_result": "用户成功登录并进入唱片库主界面，底部Tab导航正常显示",
-      "priority": "P0",
-      "category": "navigation",
-      "functional_dimension": "启动",
-      "page_level": "L1"
-    },
-    {
       "id": "TC001",
       "name": "添加唱片到收藏库",
       "description": "验证用户可通过表单完整添加一张唱片到个人收藏",

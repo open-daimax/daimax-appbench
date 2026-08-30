@@ -42,6 +42,31 @@ def _sync_aesthetics_to_row(sr: dict, plat_scores: dict) -> None:
             sr[key] = value
 
 
+_REBUILT_TOP_LEVEL_METRICS = (
+    "mean_success_rate",
+    "mean_quality",
+    "mean_experience",
+    "mean_stability_score",
+    "mean_duration_ms",
+    "mean_aesthetics_score",
+)
+
+
+def _sync_rebuilt_top_level_metrics(report_data: dict, rebuilt: dict) -> bool:
+    """将包含失败样本的重聚合指标整体同步到报告顶层。"""
+    rebuilt_tls = rebuilt.get("top_level_summary", {}) or {}
+    rebuilt_per_platform = rebuilt_tls.get("per_platform", {})
+    tls = report_data.get("top_level_summary", {})
+    if not rebuilt_per_platform or not tls:
+        return False
+
+    tls["per_platform"] = rebuilt_per_platform
+    for metric in _REBUILT_TOP_LEVEL_METRICS:
+        if metric in rebuilt_tls:
+            tls[metric] = rebuilt_tls[metric]
+    return True
+
+
 class ReportService:
     """Report generation service.
 
@@ -576,17 +601,8 @@ class ReportService:
                 from .report_rebuild import rebuild_report_data_from_samples
                 rebuilt = rebuild_report_data_from_samples(workspace_dir)
                 if rebuilt is not None:
-                    rebuilt_tls = rebuilt.get('top_level_summary', {}) or {}
-                    rebuilt_per_platform = rebuilt_tls.get('per_platform', {})
-                    if rebuilt_per_platform:
-                        tls = report_data.get('top_level_summary', {})
-                        if tls:
-                            tls['per_platform'] = rebuilt_per_platform
-                            tls['mean_success_rate'] = rebuilt_tls.get('mean_success_rate', tls.get('mean_success_rate', 0))
-                            tls['mean_quality'] = rebuilt_tls.get('mean_quality', tls.get('mean_quality', 0))
-                            tls['mean_experience'] = rebuilt_tls.get('mean_experience', tls.get('mean_experience', 0))
-                            tls['mean_stability_score'] = rebuilt_tls.get('mean_stability_score', tls.get('mean_stability_score', 0))
-                        logger.info("已从原始 scores.json 重新聚合 per_platform 指标（含 excluded 样本）")
+                    if _sync_rebuilt_top_level_metrics(report_data, rebuilt):
+                        logger.info("已从原始 scores.json 重新聚合顶层及 per_platform 指标（含 excluded 样本）")
             except Exception as exc:
                 logger.warning("重新聚合 per_platform 失败: %s", exc)
 
@@ -844,17 +860,8 @@ class ReportService:
                 from .report_rebuild import rebuild_report_data_from_samples
                 rebuilt = rebuild_report_data_from_samples(workspace)
                 if rebuilt is not None:
-                    rebuilt_tls = rebuilt.get('top_level_summary', {}) or {}
-                    rebuilt_per_platform = rebuilt_tls.get('per_platform', {})
-                    if rebuilt_per_platform:
-                        tls = report_data_raw.get('top_level_summary', {})
-                        if tls:
-                            tls['per_platform'] = rebuilt_per_platform
-                            tls['mean_success_rate'] = rebuilt_tls.get('mean_success_rate', tls.get('mean_success_rate', 0))
-                            tls['mean_quality'] = rebuilt_tls.get('mean_quality', tls.get('mean_quality', 0))
-                            tls['mean_experience'] = rebuilt_tls.get('mean_experience', tls.get('mean_experience', 0))
-                            tls['mean_stability_score'] = rebuilt_tls.get('mean_stability_score', tls.get('mean_stability_score', 0))
-                        logger.info("已从原始 scores.json 重新聚合 per_platform 指标（workspace mode，含 excluded 样本）")
+                    if _sync_rebuilt_top_level_metrics(report_data_raw, rebuilt):
+                        logger.info("已从原始 scores.json 重新聚合顶层及 per_platform 指标（workspace mode，含 excluded 样本）")
             except Exception as exc:
                 logger.warning("重新聚合 per_platform 失败 (workspace mode): %s", exc)
 

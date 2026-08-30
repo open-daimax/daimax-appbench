@@ -784,6 +784,7 @@ class EvalRun(BaseModel):
             per_platform_summary[plat] = {
                 'sample_count': plat_sample_count,
                 'mean_success_rate': round(sum(metrics['success_rates']) / len(metrics['success_rates']), 2) if metrics['success_rates'] else 0,
+                'mean_quality': round(sum(metrics['qualities']) / len(metrics['qualities']), 2) if metrics['qualities'] else 0,
                 'mean_functionality_completeness': round(sum(metrics['qualities']) / len(metrics['qualities']), 2) if metrics['qualities'] else 0,
                 'mean_experience': round(sum(metrics['experiences']) / len(metrics['experiences']), 2) if metrics['experiences'] else 0,
                 'mean_duration_ms': round(sum(metrics['durations']) / len(metrics['durations']), 2) if metrics['durations'] else 0,
@@ -802,11 +803,13 @@ class EvalRun(BaseModel):
                 'mean_aesthetics_score': round(sum(metrics['aesthetics_scores']) / len(metrics['aesthetics_scores']), 2) if metrics['aesthetics_scores'] else None,
             }
         
+        mean_quality_value = round(sum(qualities) / len(qualities), 2) if qualities else 0
         return {
             'sample_count': total_samples,
             # 顶层指标 (全局平均)
             'mean_success_rate': round(sum(success_rates) / len(success_rates), 2) if success_rates else 0,
-            'mean_functionality_completeness': round(sum(qualities) / len(qualities), 2) if qualities else 0,
+            'mean_quality': mean_quality_value,
+            'mean_functionality_completeness': mean_quality_value,
             'mean_experience': round(sum(experiences) / len(experiences), 2) if experiences else 0,
             # 新增: 按平台分解
             'per_platform': per_platform_summary,

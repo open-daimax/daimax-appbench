@@ -1012,22 +1012,68 @@ class Evaluator:
         )
         return result
 
+    def _safe_manifest_update(
+        self,
+        sample_id: str,
+        platform: str,
+        phase: str,
+        status: str,
+        *,
+        error: str | None = None,
+        pass_rate: float | None = None,
+        retries: int = 3,
+    ) -> bool:
+        """带指数退避重试地将单个 phase 状态落盘到 manifest。
+
+        落盘是辅助观测层：磁盘写入失败不应中断评测主流程，故本方法吞掉异常
+        并返回 False，绝不上抛。写入失败时以指数退避重试最多 ``retries`` 次
+        （sleep 1s/2s/3s），全部失败后记 logger.error 明确提示磁盘 manifest
+        可能已滞后。``self.manifest is None`` 时直接返回（无需落盘）。
+        """
+        if self.manifest is None:
+            return True
+        last_exc: BaseException | None = None
+        for attempt in range(1, retries + 1):
+            try:
+                self.manifest.update_item(
+                    sample_id, platform, phase, status,
+                    error=error, pass_rate=pass_rate,
+                )
+                return True
+            except Exception as exc:  # pragma: no cover - defensive
+                last_exc = exc
+                time.sleep(attempt)  # 指数退避：1s / 2s / 3s
+        logger.error(
+            "Manifest update failed after %d retries for %s/%s phase=%s status=%s; "
+            "Disk manifest may be stale. last error: %s",
+            retries, sample_id, platform, phase, status, last_exc,
+        )
+        return False
+
     def _manifest_mark_gate_skipped(
         self, sample: EvalSample, platform: str, reason: str
     ) -> None:
-        """门控判定失败（如生成失败/超时）时标记 evaluate 阶段为 skipped。"""
+        """门控判定失败（如生成失败/超时）时标记 evaluate 阶段为 skipped。
+
+        若 generate 阶段仍停留在 running（生成进程异常退出、未回写终态），
+        一并将其补写为 failed——依赖 manifest 的 per-phase 优先级合并
+        （FAILED 高于 RUNNING、但低于 COMPLETED），不会误覆盖已完成的 generate。
+        """
         if self.manifest is None:
             return
-        try:
-            self.manifest.update_item(
-                sample.sample_id, platform, "evaluate", PHASE_SKIPPED,
-                error=reason or "生成未完成，跳过评测",
+        # 生成侧超时/异常退出时 generate 可能卡在 running，补写 failed 终态。
+        if (
+            self.manifest.get_phase_status(sample.sample_id, platform, "generate")
+            == PHASE_RUNNING
+        ):
+            self._safe_manifest_update(
+                sample.sample_id, platform, "generate", PHASE_FAILED,
+                error="生成进程异常退出（由评测侧超时检测标记）",
             )
-        except Exception as exc:  # pragma: no cover - defensive
-            logger.warning(
-                "Manifest update(gate-skipped) failed for %s/%s: %s",
-                sample.sample_id, platform, exc,
-            )
+        self._safe_manifest_update(
+            sample.sample_id, platform, "evaluate", PHASE_SKIPPED,
+            error=reason or "生成未完成，跳过评测",
+        )
 
     def _manifest_should_skip(self, sample: EvalSample, platform: str) -> bool:
         """Return True if manifest already records evaluate phase as completed."""
@@ -1040,45 +1086,32 @@ class Evaluator:
             return False
 
     def _manifest_mark_running(self, sample: EvalSample, platform: str) -> None:
-        if self.manifest is None:
-            return
-        try:
-            self.manifest.update_item(sample.sample_id, platform, "evaluate", PHASE_RUNNING)
-        except Exception as exc:  # pragma: no cover - defensive
-            logger.warning("Manifest update(running) failed for %s/%s: %s", sample.sample_id, platform, exc)
+        self._safe_manifest_update(sample.sample_id, platform, "evaluate", PHASE_RUNNING)
 
     def _manifest_mark_result(
         self, sample: EvalSample, platform: str, result: PromptResult
     ) -> None:
         if self.manifest is None:
             return
-        try:
-            pass_rate = getattr(result, "pass_rate", None)
-            if result.generation_success and not result.error_message:
-                self.manifest.update_item(
-                    sample.sample_id, platform, "evaluate", PHASE_COMPLETED,
-                    pass_rate=pass_rate,
-                )
-            else:
-                self.manifest.update_item(
-                    sample.sample_id, platform, "evaluate", PHASE_FAILED,
-                    error=result.error_message or "evaluation failed",
-                    pass_rate=pass_rate,
-                )
-        except Exception as exc:  # pragma: no cover - defensive
-            logger.warning("Manifest update(result) failed for %s/%s: %s", sample.sample_id, platform, exc)
+        pass_rate = getattr(result, "pass_rate", None)
+        if result.generation_success and not result.error_message:
+            self._safe_manifest_update(
+                sample.sample_id, platform, "evaluate", PHASE_COMPLETED,
+                pass_rate=pass_rate,
+            )
+        else:
+            self._safe_manifest_update(
+                sample.sample_id, platform, "evaluate", PHASE_FAILED,
+                error=result.error_message or "evaluation failed",
+                pass_rate=pass_rate,
+            )
 
     def _manifest_mark_failed(
         self, sample: EvalSample, platform: str, exc: BaseException
     ) -> None:
-        if self.manifest is None:
-            return
-        try:
-            self.manifest.update_item(
-                sample.sample_id, platform, "evaluate", PHASE_FAILED, error=str(exc),
-            )
-        except Exception as inner:  # pragma: no cover - defensive
-            logger.warning("Manifest update(failed) failed for %s/%s: %s", sample.sample_id, platform, inner)
+        self._safe_manifest_update(
+            sample.sample_id, platform, "evaluate", PHASE_FAILED, error=str(exc),
+        )
 
     def _emit_evaluate_state_from_result(
         self, sample: EvalSample, platform: str, result: PromptResult,

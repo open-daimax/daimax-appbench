@@ -339,6 +339,8 @@ class _ScoreCollector:
         self.cost_usd: list[float] = []
         self.aesthetics_score: list[float] = []
         self.usecase_completeness: list[float] = []
+        # 后端完整度（0-100 口径，仅 requires_backend 且评分非空的样本参与）
+        self.backend_completeness: list[float] = []
         # E2E 用例通过/总数（功能完整度 e2e_pass_rate 的分子/分母）
         self.e2e_pass: int = 0
         self.e2e_count: int = 0
@@ -369,6 +371,10 @@ class _ScoreCollector:
         # usecase_completeness: 从 flat_entry 的 functionality_score 字段收集
         # （该字段由 _build_sample_entry 从 prompt_result.quality.usecase_completeness 设置）
         _append_valid(self.usecase_completeness, flat_entry, "functionality_score")
+        # backend_completeness: 从样本原始评分 plat_scores 收集（scores.json 的
+        # platforms[plat].backend_completeness，0-100 口径；requires_backend=false
+        # 的样本该值为 null，自然不参与均值，与旧管道 ExecutionSummary 口径一致）
+        _append_valid(self.backend_completeness, plat_scores, "backend_completeness")
         # e2e 用例计数：e2e_test_cases 已由各 backfill 归一化 passed 字段（含 manual_override）
         test_cases = flat_entry.get("e2e_test_cases")
         if isinstance(test_cases, list):
@@ -392,6 +398,8 @@ class _ScoreCollector:
         result["mean_cost_usd"] = _safe_mean_or_none(self.cost_usd, precision=6)
         result["mean_aesthetics_score"] = _safe_mean_or_none(self.aesthetics_score)
         result["mean_usecase_completeness"] = _safe_mean(self.usecase_completeness)
+        # 后端完整度：无任何后端样本时为 None（前端展示 '-'），避免误导性的 0
+        result["mean_backend_completeness"] = _safe_mean_or_none(self.backend_completeness)
         # 功能完整度：无 E2E 数据时为 None（前端展示 '-'），避免误导性的 0
         result["e2e_pass"] = self.e2e_pass
         result["e2e_count"] = self.e2e_count

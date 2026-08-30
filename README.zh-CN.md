@@ -69,6 +69,87 @@
 
 ---
 
+## Agent 榜单
+
+以下是用本框架实测主流 AI 编程 Agent 与应用生成平台的结果——评测规则与流水线完全一致，全程零人工介入：
+
+<div align="center">
+<img src="docs/images/leaderboard.zh-CN.png" alt="AI 应用生成 Agent 评测榜单" width="960"/>
+</div>
+
+**这些指标对一个应用意味着什么**
+
+| 指标 | 对应用的意义 | 怎么看这个数 |
+|---|---|---|
+| **成功率** | 产物能否交付的底线——构建失败、装不上、一启动就崩，后面所有维度都无从谈起 | 这是及格线而非优势项；每下降一个百分点，都意味着多一批需要人工救火的废片 |
+| **功能完整度** | 需求里的功能点真正被实现了多少。能跑起来但功能缺一半的应用，等于没做完 | 最值得看重的一项——它直接对应「拿到产物后还要补多少人工」 |
+| **后端完整度** | 数据能否持久化、接口是否真的连通——区分「能演示的 Demo」和「能用的产品」 | 仅具备后端生成能力的产品有此项；页面再漂亮，数据存不下来就只是原型 |
+| **生成耗时** | 决定迭代节奏。几分钟可以反复试错、随时改需求；二十分钟以上就变成「提交任务等结果」 | 必须和成功率、功能完整度一起看——快而常失败，不如慢而稳 |
+| **美观度** | C 端应用留存的第一道门槛，用户往往在几秒内就因为界面粗糙而流失 | 也决定了拿到产物后 UI 还要不要重做 |
+
+> 榜单中的成功率与功能完整度对应上文[评测维度](#评测维度)的同名维度；后端完整度是功能完整性的扣分因子，生成耗时与美观度是体验维度的组成部分，此处单列以便直接横向对比。
+
+---
+
+## 接入你的生成 Agent
+
+评测框架本身不含任何生成器实现——**任何能产出应用的 Agent 或平台都能接进来评测**，包括闭源的商业产品。上面榜单中的各家正是通过下面两种方式接入的。
+
+### 方式一：直接评测产物（无需写代码）
+
+Agent 生成完，把产物交给评测框架即可：
+
+```bash
+evalapp evaluate --url https://your-app.vercel.app        # Web
+evalapp evaluate --apk ./your-app.apk                     # Android
+evalapp evaluate --app ./YourApp.app                      # iOS
+evalapp evaluate --project ./your-project --platform web   # 源码项目
+```
+
+适用于任意 Agent、任意技术栈——框架只看产物，不关心它怎么来的。
+
+### 方式二：插件接入（全自动批量评测）
+
+实现 `AppGenerator` 接口，让框架直接驱动你的 Agent 跑完「生成 → 评测」全流程，一条命令扫完整个样本集：
+
+```python
+import shutil
+from evalapp.generators import AppGenerator, GenerationResult
+
+class MyAgentGenerator(AppGenerator):
+    name = "myagent"                       # 非空即自动注册
+    supported_platforms = ["web", "android"]
+
+    def is_available(self) -> bool:
+        return shutil.which("myagent-cli") is not None
+
+    def generate(self, prompt_text, platform, session_id=None,
+                 workspace_dir=None, constraints=None) -> GenerationResult:
+        # 调用你的 Agent，产出源码项目目录或已部署 URL
+        return GenerationResult(
+            success=True, platform=platform,
+            project_path="/path/to/generated/project",  # 源码产物
+            h5_url="",                                   # 或 Web 部署地址
+        )
+```
+
+在你自己的包里声明 entry point，`pip install` 后即被自动发现，**无需改动本仓任何代码**：
+
+```toml
+[project.entry-points."evalapp.generators"]
+myagent = "my_pkg.generators:MyAgentGenerator"
+```
+
+然后指定生成器批量评测：
+
+```bash
+evalapp evaluate --workspace ./ws --samples-dir ./dataset/V2 --platform web --generator myagent
+```
+
+生成器还可选实现 `setup()` / `teardown()` / `validate_config()` / `resume()` 等生命周期钩子；接口详情见 [API 参考](docs/API.zh-CN.md)。
+
+---
+
 ## 支持平台
 
 评测支持三类产物，不限定其生成方式：

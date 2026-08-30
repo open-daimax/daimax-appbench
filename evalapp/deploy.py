@@ -1,7 +1,8 @@
 """Deployment health check / repair / info subcommands.
 
 Provides ``evalapp deploy`` commands for post-install environment maintenance.
-This complements the first-time bootstrap script at ``deploy/deploy.sh``:
+This complements the first-time bootstrap script ``deploy/deploy.sh`` that ships
+with the console, which is deployed and maintained separately:
 
 - ``evalapp deploy check``  — diagnose current installation, generator CLIs,
   runtime dependencies (Node/JDK/adb/Xcode) and generator artifact directories.
@@ -249,7 +250,7 @@ DEFAULT_GENERATORS: list[str] = []  # Resolved at runtime via _get_default_gener
 
 @click.group(name="deploy")
 def deploy_group() -> None:
-    """evalapp 部署健康检查与修复（首次安装请使用 deploy/deploy.sh）。"""
+    """evalapp 部署健康检查与修复（首次安装请使用控制台随附的 deploy/deploy.sh）。"""
 
 
 @deploy_group.command(name="info")

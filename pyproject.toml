@@ -44,7 +44,7 @@ include = ["evalapp*"]
 exclude = ["results*"]
 
 [tool.setuptools.package-data]
-# 报告前端单文件模板（studio/frontend 构建产物，CLI 生成 report.html 时注入数据）
+# 报告前端单文件模板（本仓 report-ui/ 构建产物，CLI 生成 report.html 时注入数据）
 "evalapp.evaluation.results.reporting" = ["templates/*.html"]
 
 [tool.pytest.ini_options]

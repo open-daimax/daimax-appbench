@@ -66,6 +66,24 @@ class CodexCLIGeneratorConfig(BaseModel):
     system_prompt: str = ""
 
 
+class OpenCodeCLIGeneratorConfig(BaseModel):
+    """Configuration for OpenCode CLI as an app generator.
+
+    复用 DashScope OpenAI-compatible 端点：``base_url`` / ``model`` 必须显式配置，
+    ``api_key`` 优先取 ``api_key_env`` 指定的环境变量（默认 ``CODEX_API_KEY``）。
+    自定义 provider 由 client 经 ``OPENCODE_CONFIG_CONTENT`` 内联注入，密钥不落地文件。
+    """
+
+    cli_path: str = "opencode"
+    workspace_root: str = "~/opencode_projects"
+    timeout: int = Field(default=3600, gt=0)
+    model: str = ""
+    base_url: str = ""
+    api_key: str = ""
+    api_key_env: str = "CODEX_API_KEY"
+    system_prompt: str = ""
+
+
 class ClaudeConfig(BaseModel):
     """Claude Code CLI configuration.
 
@@ -240,6 +258,9 @@ class Config(BaseModel):
     codex_generator: CodexCLIGeneratorConfig = Field(
         default_factory=CodexCLIGeneratorConfig
     )
+    opencode_generator: OpenCodeCLIGeneratorConfig = Field(
+        default_factory=OpenCodeCLIGeneratorConfig
+    )
 
     # 运行时注入字段（不参与序列化，由命令行 setup 设置）
     _generator_cli_path: str | None = PrivateAttr(default=None)
@@ -326,6 +347,10 @@ class Config(BaseModel):
     @property
     def codex_workspace_root_path(self) -> Path:
         return Path(self.codex_generator.workspace_root).expanduser()
+
+    @property
+    def opencode_workspace_root_path(self) -> Path:
+        return Path(self.opencode_generator.workspace_root).expanduser()
 
 
 

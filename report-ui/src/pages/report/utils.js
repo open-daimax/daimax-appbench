@@ -81,14 +81,16 @@ export function recalculateSummary(filteredResults) {
   const perPlatform = {}
   Object.entries(byPlatform).forEach(([platform, samples]) => {
     const e2e = calcE2E(samples)
+    const platformMeanQuality = meanValue(samples, 'functionality_score')
+      || meanValue(samples, 'quality_score')
     perPlatform[platform] = {
       sample_count: samples.length,
       mean_success_rate: meanValue(samples, 'success_rate_score'),
-      mean_quality: meanValue(samples, 'quality_score'),
+      mean_quality: platformMeanQuality,
       mean_experience: meanValue(samples, 'experience_score'),
       mean_duration_ms: meanValue(samples, 'duration_ms'),
       mean_initial_generation_rate: meanValue(samples, 'success_rate_score'),
-      mean_functionality_completeness: meanValue(samples, 'functionality_score'),
+      mean_functionality_completeness: platformMeanQuality,
       mean_stability_score: meanValue(samples, 'stability_score'),
       mean_aesthetics_score: meanValue(samples, 'aesthetics_score'),
       e2e_pass_rate: e2e.rate,
@@ -113,10 +115,15 @@ export function recalculateSummary(filteredResults) {
     }
   })
 
+  // 功能完整性：新版样本使用 functionality_score，旧版使用 quality_score
+  const mean_quality = meanValue(filteredResults, 'functionality_score')
+    || meanValue(filteredResults, 'quality_score')
+
   return {
     sample_count: filteredResults.length,
     mean_success_rate: meanValue(filteredResults, 'success_rate_score'),
-    mean_quality: meanValue(filteredResults, 'quality_score'),
+    mean_quality,
+    mean_functionality_completeness: mean_quality,
     mean_experience: meanValue(filteredResults, 'experience_score'),
     per_platform: perPlatform,
     mean_initial_generation_rate: meanValue(filteredResults, 'success_rate_score'),

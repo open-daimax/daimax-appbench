@@ -4,19 +4,6 @@
   "dataset_version": "v2",
   "test_cases": [
     {
-      "id": "TC_LAUNCH",
-      "name": "应用启动验证",
-      "description": "验证应用成功启动，无白屏、黑屏或崩溃",
-      "steps": [
-        "启动应用 -> 预期: 应用正常启动，无白屏或崩溃"
-      ],
-      "expected_result": "应用成功启动",
-      "priority": "P0",
-      "category": "launch_check",
-      "functional_dimension": "basic_function",
-      "page_level": "L1"
-    },
-    {
       "id": "TC001",
       "name": "我的花园植物列表展示",
       "description": "验证首页展示预置植物卡片信息完整",

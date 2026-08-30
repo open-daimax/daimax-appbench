@@ -343,6 +343,22 @@ function ReportView() {
     [filteredResults]
   )
 
+  // 本地静态报告可能只注入 scores_summary（无 sample_results），
+  // 此时用顶层汇总兜底，避免所有统计卡片显示 0。
+  const displaySummary = React.useMemo(() => {
+    if (filteredSummary?.sample_count === 0 && reportData?.top_level_summary) {
+      const top = reportData.top_level_summary
+      return {
+        ...top,
+        ...filteredSummary,
+        mean_quality: top.mean_functionality_completeness ?? top.mean_quality ?? filteredSummary.mean_quality,
+        mean_functionality_completeness: top.mean_functionality_completeness ?? filteredSummary.mean_functionality_completeness,
+        per_platform: top.per_platform || filteredSummary.per_platform,
+      }
+    }
+    return filteredSummary
+  }, [filteredSummary, reportData])
+
   const handleShowFunctionality = (record) => {
     setFuncModalRecord(record)
     setFuncModalVisible(true)
@@ -438,15 +454,15 @@ function ReportView() {
           )}
 
           {/* Score Cards */}
-          {filteredSummary && (
-            <ScoreCards summary={filteredSummary} />
+          {displaySummary && (
+            <ScoreCards summary={displaySummary} />
           )}
 
           {/* Platform Table */}
-          {filteredSummary?.per_platform && Object.keys(filteredSummary.per_platform).length > 0 && (
+          {displaySummary?.per_platform && Object.keys(displaySummary.per_platform).length > 0 && (
             <div className="report-section">
               <div className="report-section-title">分平台指标</div>
-              <PlatformTable perPlatform={filteredSummary.per_platform} />
+              <PlatformTable perPlatform={displaySummary.per_platform} />
             </div>
           )}
 

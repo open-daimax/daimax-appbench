@@ -69,6 +69,87 @@ All scores are on a 0–100 scale. Weights, thresholds, and penalty coefficients
 
 ---
 
+## Agent Leaderboard
+
+Below are results measured with this framework across mainstream AI coding agents and app-generation platforms — identical evaluation rules, identical pipeline, zero human intervention:
+
+<div align="center">
+<img src="docs/images/leaderboard.png" alt="AI app-generation agent leaderboard" width="960"/>
+</div>
+
+**What these metrics mean for an app**
+
+| Metric | Why it matters | How to read it |
+|---|---|---|
+| **Success Rate** | The floor for shippability — if the build fails, the app won't install, or it crashes on launch, every other metric is moot | A pass/fail bar rather than a differentiator; every point lost means another batch of artifacts needing manual rescue |
+| **Functionality Completeness** | How much of the requirement was actually implemented. An app that runs but is half-built is not done | The metric to weigh most heavily — it maps directly to "how much manual work is left after delivery" |
+| **Backend Completeness** | Whether data actually persists and endpoints actually connect — the line between a demo and a usable product | Only products capable of generating a backend report this; a beautiful UI that can't save data is still just a prototype |
+| **Generation Time** | Sets the iteration rhythm. A few minutes means you can retry and reshape requirements freely; past twenty it becomes "submit a job and wait" | Must be read alongside success rate and completeness — fast but flaky loses to slow but steady |
+| **Aesthetic Score** | The first retention gate for consumer apps; users bounce within seconds over a rough-looking UI | Also determines whether the UI needs a rebuild after delivery |
+
+> Success Rate and Functionality Completeness map to the same-named dimensions in [Evaluation Dimensions](#evaluation-dimensions) above. Backend Completeness is a deduction factor within Functional Completeness, while Generation Time and Aesthetics are components of the Experience dimension — they are broken out here for direct side-by-side comparison.
+
+---
+
+## Bring Your Own Agent
+
+The evaluation framework ships no generator implementation of its own — **any agent or platform that can produce an app can be plugged in and measured**, closed-source commercial products included. Every entry in the leaderboard above was onboarded through one of the two paths below.
+
+### Path 1: Evaluate artifacts directly (no code required)
+
+Let your agent generate, then hand the artifact to the framework:
+
+```bash
+evalapp evaluate --url https://your-app.vercel.app        # Web
+evalapp evaluate --apk ./your-app.apk                     # Android
+evalapp evaluate --app ./YourApp.app                      # iOS
+evalapp evaluate --project ./your-project --platform web   # Source project
+```
+
+Works with any agent and any tech stack — the framework only looks at the artifact, never at how it was produced.
+
+### Path 2: Plug in as a generator (fully automated batch runs)
+
+Implement the `AppGenerator` interface and let the framework drive your agent through the whole **generate → evaluate** loop, sweeping an entire benchmark suite in one command:
+
+```python
+import shutil
+from evalapp.generators import AppGenerator, GenerationResult
+
+class MyAgentGenerator(AppGenerator):
+    name = "myagent"                       # non-empty name ⇒ auto-registered
+    supported_platforms = ["web", "android"]
+
+    def is_available(self) -> bool:
+        return shutil.which("myagent-cli") is not None
+
+    def generate(self, prompt_text, platform, session_id=None,
+                 workspace_dir=None, constraints=None) -> GenerationResult:
+        # Invoke your agent; produce a source project or a deployed URL
+        return GenerationResult(
+            success=True, platform=platform,
+            project_path="/path/to/generated/project",  # source artifact
+            h5_url="",                                   # or the deployed web URL
+        )
+```
+
+Declare an entry point in your own package — it is discovered automatically after `pip install`, with **no changes to this repository**:
+
+```toml
+[project.entry-points."evalapp.generators"]
+myagent = "my_pkg.generators:MyAgentGenerator"
+```
+
+Then run a batch evaluation against it:
+
+```bash
+evalapp evaluate --workspace ./ws --samples-dir ./dataset/V2 --platform web --generator myagent
+```
+
+Generators may optionally implement the `setup()` / `teardown()` / `validate_config()` / `resume()` lifecycle hooks. See the [API Reference](docs/API.md) for interface details.
+
+---
+
 ## Supported Platforms
 
 The benchmark evaluates three kinds of build artifacts, independent of how they were produced:

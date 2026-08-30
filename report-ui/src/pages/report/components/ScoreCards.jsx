@@ -13,7 +13,9 @@ function safeFormatNumber(value, decimals = 1) {
 export default function ScoreCards({ summary }) {
   if (!summary) return null
 
-  const { mean_success_rate, mean_quality, mean_experience, mean_cost_usd } = summary
+  const mean_functionality_completeness =
+    summary?.mean_functionality_completeness ?? summary?.mean_quality ?? 0
+  const { mean_success_rate, mean_experience, mean_cost_usd } = summary
 
   const cards = [
     {
@@ -27,7 +29,7 @@ export default function ScoreCards({ summary }) {
     },
     {
       title: '功能完整性分',
-      value: mean_quality ?? 0,
+      value: mean_functionality_completeness,
       suffix: '分',
       icon: <StarOutlined />,
       iconColor: '#1890ff',
