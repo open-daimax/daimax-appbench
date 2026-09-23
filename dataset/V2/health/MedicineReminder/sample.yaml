@@ -3,6 +3,8 @@ dataset_version: "v2"
 sample_id: MedicineReminder
 title: 用药提醒
 app_type: 健康
+requires_backend: false
+requires_auth: false
 data_mode: "frontend_mock"
 
 requirement: |

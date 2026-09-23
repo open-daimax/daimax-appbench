@@ -180,6 +180,7 @@ core_functions:
 
 constraints:
   - 纯前端应用，所有数据硬编码在前端
+  - 纯前端应用，无需后端与登录注册功能
   - 收藏和自定义搭配方案存储在localStorage
   - 口味偏好存储在localStorage
   - |

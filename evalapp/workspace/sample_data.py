@@ -8,6 +8,10 @@
   仅记录生成元数据，不含分值，保持原状即可。
 * ``write_sample_scores`` 提供逐样本评分持久化，每个样本×平台评测完成后
   立即落盘，避免后续汇总步骤报错时丢失已有评分数据。
+* ``merge_evaluation_platform`` 提供 evaluation.json 的平台级增量合并写入
+  （file_lock 保护），逐样本实时落盘与批次收尾均走此路径；
+  ``write_evaluation`` 的整文件覆盖会丢弃未提供的平台，仅保留给确需
+  整体重置的调用方。
 * ``consolidate_sample_report`` 将散落在 generation.json / scores.json /
   evaluation.json / sample.yaml 中的数据合并写入 sample_report.json，使其
   成为该样本的自包含报告。下游只需读取一个文件即可获取全部评测信息。
@@ -33,13 +37,77 @@ def write_generation(workspace_dir: Path, sample_id: str, data: dict):
 
 
 def write_evaluation(workspace_dir: Path, sample_id: str, data: dict):
-    """写入样本的 evaluation.json（原子写入 + 统一精度）。"""
+    """写入样本的 evaluation.json（原子写入 + 统一精度）。
+
+    整文件覆盖语义：会丢弃本次未提供的平台数据，仅适用于确需整体
+    重置的调用方；常规路径（含批次收尾 ``persist_all``）请走
+    :func:`merge_evaluation_platform` 逐平台增量合并，避免单平台评测
+    或并发平台互相覆盖。
+    """
     workspace_dir = Path(workspace_dir)
     sample_dir = workspace_dir / sample_id
     sample_dir.mkdir(parents=True, exist_ok=True)
     # evaluation 含子指标分值，统一调用 round_scores 与 scores.json 对齐精度
     data = round_scores(data)
     atomic_write_json(sample_dir / "evaluation.json", data)
+
+
+def merge_evaluation_platform(
+    workspace_dir: Path,
+    sample_id: str,
+    platform: str,
+    platform_data: dict,
+) -> None:
+    """将单个平台的评测详情增量合并进 evaluation.json（并发安全）。
+
+    与 :func:`write_scores` 同构：``file_lock`` 保护读-改-写，仅替换
+    ``platforms.{platform}``，保留其他平台已有数据；底层 ``atomic_write_json``
+    保证崩溃安全。用于每个样本×平台评测完成后立即落盘，评测进程被中断时
+    已完成样本的结果不会停留在上一轮的旧文件里。
+
+    Args:
+        workspace_dir: 工作区根目录。
+        sample_id: 样本 ID。
+        platform: 评测平台（如 expo_web）。
+        platform_data: 该平台在 evaluation.json 中的数据块。
+    """
+    workspace_dir = Path(workspace_dir)
+    sample_dir = workspace_dir / sample_id
+    sample_dir.mkdir(parents=True, exist_ok=True)
+
+    target = sample_dir / "evaluation.json"
+    lock_path = sample_dir / ".evaluation.lock"
+
+    platform_data = round_scores(platform_data)
+
+    with file_lock(lock_path):
+        existing: dict = {}
+        if target.exists():
+            try:
+                existing = json.loads(target.read_text(encoding="utf-8")) or {}
+            except json.JSONDecodeError as exc:
+                logger.warning(
+                    "evaluation.json corrupted at %s: %s; resetting to empty",
+                    target, exc,
+                )
+                existing = {}
+            except OSError as exc:
+                logger.error(
+                    "failed to read evaluation.json at %s: %s", target, exc,
+                )
+                raise
+        if not isinstance(existing, dict):
+            existing = {}
+
+        platforms = existing.get("platforms")
+        if not isinstance(platforms, dict):
+            platforms = {}
+        platforms[platform] = platform_data
+
+        merged = dict(existing)
+        merged["sample_id"] = existing.get("sample_id") or sample_id
+        merged["platforms"] = platforms
+        atomic_write_json(target, merged)
 
 
 def write_scores(workspace_dir: Path, sample_id: str, data: dict):
@@ -221,6 +289,7 @@ def write_sample_scores(
     platform: str,
     prompt_result: dict,
     scores: dict | None = None,
+    updated_at: str | None = None,
 ) -> None:
     """逐样本×平台持久化评分数据到 ``{workspace}/{sample_id}/sample_scores.json``。
 
@@ -233,6 +302,10 @@ def write_sample_scores(
         platform: 评测平台（如 android/ios/miniprogram）。
         prompt_result: ``PromptResult.model_dump()`` 的结果。
         scores: 可选的精简评分摘要（如 composite_score、pass_count）。
+        updated_at: 可选的秒级 ISO 时间戳。同一完成事件同时写
+            scores.json 时应传入同一时间戳，使两文件的 ``updated_at``
+            严格相等，保证聚合器新鲜度仲裁的确定性（相等时一律选
+            信息更完整的 scores.json）；缺省取当前本地时间。
     """
     workspace_dir = Path(workspace_dir)
     sample_dir = workspace_dir / sample_id
@@ -240,7 +313,7 @@ def write_sample_scores(
     target = sample_dir / "sample_scores.json"
     lock_path = sample_dir / ".sample_scores.lock"
 
-    now = datetime.now().isoformat(timespec="seconds")
+    now = updated_at or datetime.now().isoformat(timespec="seconds")
     platform_entry: dict[str, Any] = {
         "platform": platform,
         "updated_at": now,

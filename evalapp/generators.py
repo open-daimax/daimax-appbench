@@ -190,6 +190,20 @@ def _load_entry_point_generators() -> None:
             )
 
 
+def is_generator_registered(name: str) -> bool:
+    """判断生成器名是否可用（必要时先加载 entry point 插件再判定）。
+
+    供调用方在实例化前做名称校验与回落决策，避免用 ``ValueError``
+    控制流程。命中进程内注册表时不触发插件加载。
+    """
+    if not name:
+        return False
+    if GeneratorRegistry.get(name) is not None:
+        return True
+    _load_entry_point_generators()
+    return GeneratorRegistry.get(name) is not None
+
+
 def get_generator(name: str, config) -> AppGenerator:
     """Look up and instantiate a generator by name.
 
@@ -249,4 +263,5 @@ __all__ = [
     "GenerationResult",
     "GeneratorRegistry",
     "get_generator",
+    "is_generator_registered",
 ]

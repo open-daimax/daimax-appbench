@@ -2,6 +2,8 @@ version: "2.0"
 sample_id: CoffeeGuide
 title: 咖啡制作指南
 app_type: 生活
+requires_backend: false
+requires_auth: false
 dataset_version: "v2"
 data_mode: "frontend_only"
 
@@ -67,7 +69,7 @@ core_functions:
   - 我的/设置页(个人资料/偏好设置)
 
 constraints: |
-  纯前端应用，数据硬编码；收藏状态存localStorage；计时器精度±500ms。
+  纯前端应用，数据硬编码；收藏状态存localStorage；计时器精度±500ms；无需后端与登录注册功能。
   内置数据：
   - 手冲类：V60手冲(初学/4min)、Chemex(进阶/5min)、Kalita(初学/4min)
   - 意式类：浓缩咖啡(进阶/1min)、拿铁(初学/3min)、卡布奇诺(进阶/3min)

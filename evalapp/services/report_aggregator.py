@@ -10,6 +10,13 @@
 
 当工作区不存在任何有效的样本数据文件时，返回 None，
 让调用方回退到读取 report_data.json。
+
+新鲜度仲裁（scores.json vs sample_scores.json）：
+  ``sample_scores.json`` 由评测器在每个样本×平台完成时实时写入，
+  ``scores.json`` 则由批次收尾的 ``persist_all`` 与后续报告阶段写入。评测进程
+  被中断时 ``persist_all`` 不会执行，``scores.json`` 会停留在上一轮的旧数据
+  （甚至被报告阶段基于旧数据重写一次），掩盖新鲜的实时结果、造成假 0 分。
+  因此两者同时存在时按新鲜度取较新者（见 :func:`_resolve_fresh_scores`）。
 """
 
 from __future__ import annotations
@@ -17,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 from ..utils.currency import extract_cost_usd
@@ -50,6 +58,175 @@ def _get_excluded_workspace_dirs() -> frozenset[str]:
     if not extra:
         return _NON_SAMPLE_DIRS
     return _NON_SAMPLE_DIRS | frozenset(extra)
+
+
+# ===================== 新鲜度仲裁（scores.json vs sample_scores.json） =====================
+
+
+def _parse_iso_ts(value) -> float | None:
+    """将 ISO 时间字符串解析为 epoch 秒；无法解析时返回 None。
+
+    naive 时间串按本地时区解释（与 ``write_sample_scores`` /
+    ``EvaluationService.persist_scores`` 写入 ``updated_at`` 的约定一致），
+    因此与文件 mtime 处于同一时间基准，可直接比较。
+    """
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value)
+    except (ValueError, TypeError):
+        return None
+    try:
+        return dt.timestamp()
+    except (OverflowError, OSError, ValueError):
+        return None
+
+
+def _content_timestamp(data) -> float | None:
+    """提取 JSON 内容里的时间戳（epoch 秒）。
+
+    优先顶层 ``updated_at``；缺失时取各平台 ``updated_at`` 的最大值
+    （多平台分批完成时，文件整体的新鲜度等于最新一个平台）。
+    """
+    if not isinstance(data, dict):
+        return None
+    ts = _parse_iso_ts(data.get("updated_at"))
+    if ts is not None:
+        return ts
+    platforms = data.get("platforms")
+    if not isinstance(platforms, dict):
+        return None
+    stamps = [
+        _parse_iso_ts(p.get("updated_at"))
+        for p in platforms.values()
+        if isinstance(p, dict)
+    ]
+    stamps = [s for s in stamps if s is not None]
+    return max(stamps) if stamps else None
+
+
+def _freshness(path: Path, data) -> float:
+    """文件新鲜度（epoch 秒）：优先内容时间戳，缺失时回退到 mtime。
+
+    同一完成事件写入的两文件内容时间戳严格相等（见
+    ``evaluator._persist_sample_scores``），配合 :func:`_resolve_fresh_scores`
+    的严格大于比较，相等时一律选信息更完整的 scores.json，避免跨秒边界
+    非确定性地选中降级转换结构（丢 backend_completeness 等字段）。
+
+    注意：这里返回**同一量纲的 float**（内容时间戳或 mtime 二选一），
+    不可改为 ``(是否有内容时间戳, 值)`` 之类的 tuple 键——历史批次的
+    scores.json 无 ``updated_at`` 而 sample_scores.json 有时，tuple 首元素
+    差异会使 sample_scores 恒定胜出，破坏以 scores.json 为准的聚合。
+    两侧均无内容时间戳时才回退到 mtime 比较。
+    """
+    ts = _content_timestamp(data)
+    if ts is not None:
+        return ts
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
+def _resolve_fresh_scores(
+    sample_dir: Path,
+    *,
+    allow_sample_scores_fallback: bool = True,
+) -> tuple[dict | None, str]:
+    """按新鲜度解析样本的评分数据。
+
+    仲裁规则：
+
+    * 两者都存在 → 仅当 ``sample_scores.json`` 的时间戳**严格大于**
+      ``scores.json`` 时才选前者；相等（同一完成事件写入，两文件时间戳
+      严格相等）或无法判定时一律取 ``scores.json``，因为它是信息更完整
+      的产物（含 stability / aesthetics / backend 等字段，而
+      ``sample_scores.json`` 转换后只有汇总分值）。
+    * 仅 ``sample_scores.json`` 存在 → 走既有回退路径（转换后返回）。
+      历史 miniprogram 批次只有这个文件，必须继续工作。
+    * 仅 ``scores.json`` 存在 → 直接返回（绝大多数批次的正常路径）。
+
+    Args:
+        sample_dir: 样本目录。
+        allow_sample_scores_fallback: ``scores.json`` 缺失/损坏时是否允许回退到
+            ``sample_scores.json``。``get_sample_report`` 传 True（保留既有回退
+            语义）；``aggregate`` 传 False，以保持“无 scores.json 则跳过该样本”
+            的原有行为不变（避免只有 sample_scores.json 的历史批次被新增
+            纳入聚合，影响其他平台/批次的正常聚合结果）。
+
+    Returns:
+        ``(scores_raw, source)``；source 为 ``"scores"`` / ``"sample_scores"`` /
+        ``""``（无可用数据）。scores_raw 为 None 时表示无有效数据。
+    """
+    scores_path = sample_dir / "scores.json"
+    ss_path = sample_dir / "sample_scores.json"
+
+    scores_raw = _load_json_safe(scores_path)
+    if not isinstance(scores_raw, dict):
+        scores_raw = None
+
+    if not ss_path.exists():
+        # 无 sample_scores.json：完全保持既有行为
+        return scores_raw, ("scores" if scores_raw is not None else "")
+
+    ss_raw = _load_json_safe(ss_path)
+    if not isinstance(ss_raw, dict):
+        return scores_raw, ("scores" if scores_raw is not None else "")
+
+    converted = _convert_sample_scores_to_scores(ss_raw)
+
+    if scores_raw is None:
+        # scores.json 缺失/损坏：仅在调用方允许时保留既有回退路径
+        if allow_sample_scores_fallback and converted is not None:
+            return converted, "sample_scores"
+        return scores_raw, ("scores" if scores_raw is not None else "")
+
+    if converted is None:
+        return scores_raw, "scores"
+
+    # 两者都存在且均可用 → 仅当 sample_scores 严格更新时采用；
+    # 时间戳相等（同事件）或无法判定 → 一律选信息更完整的 scores.json
+    if _freshness(ss_path, ss_raw) > _freshness(scores_path, scores_raw):
+        logger.info(
+            "样本评分新鲜度仲裁：%s 的 sample_scores.json 比 scores.json 新，采用前者",
+            sample_dir.name,
+        )
+        return converted, "sample_scores"
+    return scores_raw, "scores"
+
+
+def _convert_sample_scores_to_scores(sample_scores_raw: dict) -> dict | None:
+    """将 sample_scores.json 格式转换为 scores.json 兼容格式，以便复用现有的报告构建逻辑。"""
+    platforms_raw = sample_scores_raw.get("platforms")
+    if not platforms_raw or not isinstance(platforms_raw, dict):
+        return None
+
+    converted_platforms = {}
+    for plat_name, plat_data in platforms_raw.items():
+        if not isinstance(plat_data, dict):
+            continue
+        scores = plat_data.get("scores", {})
+        if not isinstance(scores, dict):
+            scores = {}
+
+        # 映射 sample_scores 的 scores 子结构到 scores.json 的扁平格式
+        converted_platforms[plat_name] = {
+            "success_rate_score": scores.get("success_rate"),
+            "quality_score": scores.get("quality"),
+            "experience_score": scores.get("experience"),
+            "generation_success": scores.get("generation_success"),
+            "pass_count": scores.get("pass_count"),
+            "total_count": scores.get("total_count"),
+            "pass_rate": scores.get("pass_rate"),
+        }
+
+    if not converted_platforms:
+        return None
+
+    return {
+        "sample_id": sample_scores_raw.get("sample_id", ""),
+        "platforms": converted_platforms,
+    }
 
 
 class ReportAggregator:
@@ -103,8 +280,14 @@ class ReportAggregator:
         unique_sample_ids: set[str] = set()
 
         for sample_id, sample_dir in sorted(sample_dirs.items()):
-            # 读取 scores.json
-            scores_raw = _load_json_safe(sample_dir / "scores.json")
+            # 读取 scores.json；与 sample_scores.json 同时存在时按新鲜度取较新者，
+            # 避免评测中断后遗留的旧 scores.json 掩盖新鲜的逐样本实时结果（假 0 分）。
+            # allow_sample_scores_fallback=False：保持“无 scores.json 则跳过该样本”
+            # 的原有语义，不改变历史批次（如只有 sample_scores.json 的 miniprogram）
+            # 的聚合范围。
+            scores_raw, _scores_source = _resolve_fresh_scores(
+                sample_dir, allow_sample_scores_fallback=False,
+            )
             if scores_raw is None or not isinstance(scores_raw, dict):
                 logger.warning("样本 '%s' 的 scores.json 无效，跳过", sample_id)
                 continue
@@ -237,7 +420,8 @@ class ReportAggregator:
     def get_sample_report(self, sample_id: str) -> dict | None:
         """获取单个样本的报告数据。
 
-        优先读取 scores.json，然后从 generation.json 和 sample_report.json 补充数据。
+        优先读取 scores.json（与 sample_scores.json 同时存在时按新鲜度取较新者），
+        然后从 generation.json 和 sample_report.json 补充数据。
 
         Args:
             sample_id: 样本 ID
@@ -249,21 +433,15 @@ class ReportAggregator:
         if not sample_dir.is_dir():
             return None
 
-        scores_raw = _load_json_safe(sample_dir / "scores.json")
-        if scores_raw is None or not isinstance(scores_raw, dict):
-            # 回退：尝试从 sample_scores.json 转换（批次执行中已完成的样本）
-            sample_scores_raw = _load_json_safe(sample_dir / "sample_scores.json")
-            if sample_scores_raw is not None and isinstance(sample_scores_raw, dict):
-                converted = self._convert_sample_scores_to_scores(sample_scores_raw)
-                if converted is not None:
-                    scores_raw = converted
+        # 新鲜度仲裁 + 既有回退链：scores.json → sample_scores.json 转换
+        scores_raw, _scores_source = _resolve_fresh_scores(sample_dir)
 
-            if scores_raw is None or not isinstance(scores_raw, dict):
-                # 最终回退到 sample_report.json
-                sr_data = _load_json_safe(sample_dir / "sample_report.json")
-                if sr_data is not None and isinstance(sr_data, dict):
-                    return sr_data
-                return None
+        if scores_raw is None or not isinstance(scores_raw, dict):
+            # 最终回退到 sample_report.json
+            sr_data = _load_json_safe(sample_dir / "sample_report.json")
+            if sr_data is not None and isinstance(sr_data, dict):
+                return sr_data
+            return None
 
         platforms_data = scores_raw.get("platforms", {})
         if not isinstance(platforms_data, dict):
@@ -291,37 +469,12 @@ class ReportAggregator:
 
 
     def _convert_sample_scores_to_scores(self, sample_scores_raw: dict) -> dict | None:
-        """将 sample_scores.json 格式转换为 scores.json 兼容格式，以便复用现有的报告构建逻辑。"""
-        platforms_raw = sample_scores_raw.get("platforms")
-        if not platforms_raw or not isinstance(platforms_raw, dict):
-            return None
+        """将 sample_scores.json 转换为 scores.json 兼容格式（委派给模块级实现）。
 
-        converted_platforms = {}
-        for plat_name, plat_data in platforms_raw.items():
-            if not isinstance(plat_data, dict):
-                continue
-            scores = plat_data.get("scores", {})
-            if not isinstance(scores, dict):
-                scores = {}
-
-            # 映射 sample_scores 的 scores 子结构到 scores.json 的扁平格式
-            converted_platforms[plat_name] = {
-                "success_rate_score": scores.get("success_rate"),
-                "quality_score": scores.get("quality"),
-                "experience_score": scores.get("experience"),
-                "generation_success": scores.get("generation_success"),
-                "pass_count": scores.get("pass_count"),
-                "total_count": scores.get("total_count"),
-                "pass_rate": scores.get("pass_rate"),
-            }
-
-        if not converted_platforms:
-            return None
-
-        return {
-            "sample_id": sample_scores_raw.get("sample_id", ""),
-            "platforms": converted_platforms,
-        }
+        保留为实例方法以兼容既有调用方；实现已上提为模块级函数，
+        供 :func:`_resolve_fresh_scores` 复用。
+        """
+        return _convert_sample_scores_to_scores(sample_scores_raw)
 
 
 class _ScoreCollector:
@@ -820,44 +973,6 @@ def _backfill_token_duration(
             entry.setdefault("cost_usd", gen_cost)
 
 
-def _extract_bracket_argument(content: str, start: int) -> str | None:
-    """从 start 位置开始，用括号匹配提取 push() 的 JSON 参数。
-
-    处理字符串内的括号转义，返回去掉末尾分号和空白后的 JSON 字符串。
-    """
-    depth = 0
-    in_string = False
-    escape = False
-    i = start
-    length = len(content)
-
-    while i < length:
-        c = content[i]
-        if escape:
-            escape = False
-        elif c == "\\":
-            escape = True
-        elif c == '"':
-            in_string = not in_string
-        elif not in_string:
-            if c in ("{", "["):
-                depth += 1
-            elif c in ("}", "]"):
-                depth -= 1
-            elif c == ")" and depth == 0:
-                break
-        i += 1
-
-    if i >= length:
-        return None
-
-    json_str = content[start:i].strip()
-    # 处理末尾分号
-    if json_str.endswith(";"):
-        json_str = json_str[:-1].strip()
-    return json_str
-
-
 def _candidate_project_dirs(sample_dir: Path, platform: str) -> list[Path]:
     """候选项目目录：优先 generated_projects/{platform}，其次同级其它目录。
 
@@ -967,11 +1082,16 @@ def _read_cost_from_report_data_js(report_path: Path) -> float | None:
             return None
 
         json_start = push_matches[-1].end()
-        json_str = _extract_bracket_argument(content, json_start)
-        if not json_str:
+        # 跳过参数前导空白后用 C 级 JSONDecoder.raw_decode 直接解码 push() 参数：
+        # 它在 JSON 值结束处停止并忽略其后的 `)`/`;` 等尾随内容，等价于原括号匹配
+        # + json.loads，但避免在 10~35MB 的 execution_report_data.js 上逐字符 Python
+        # 循环（原单样本 ~0.85s，是全量扫描长尾主因）。
+        n = len(content)
+        while json_start < n and content[json_start] in " \t\r\n":
+            json_start += 1
+        data, _ = json.JSONDecoder().raw_decode(content, json_start)
+        if not isinstance(data, dict):
             return None
-
-        data = json.loads(json_str)
 
         # master 和 sub_agents 可能在顶层或 summary 内
         master = data.get("master")

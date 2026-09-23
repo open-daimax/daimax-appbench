@@ -3,7 +3,11 @@
 用法:
     python scripts/reaggregate_scores_summary.py <workspace_path>
 
-会调用 report_aggregator.aggregate_report() 并将结果写入 report/scores_summary.json，
+会调用 report_aggregator.aggregate_report() 并复用
+ReportService.write_scores_summary() 写入 report/scores_summary.json，
+保证旁路重聚合产物与正式报告路径携带同样的两项保证：
+  1. 顶层 e2e 计数与 per_platform 同源（_sync_top_level_e2e_from_per_platform）；
+  2. interrupted / completed_samples / total_samples 中断标注（detect_run_interruption）。
 打印 before/after 的 mean_functionality_completeness 值。
 """
 import json
@@ -14,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evalapp.services.report_aggregator import aggregate_report
-from evalapp.workspace.report_data import write_scores_summary
+from evalapp.services.reporting import ReportService
 
 
 def main():
@@ -51,8 +55,8 @@ def main():
         print("错误: aggregate_report 返回 None，工作区中无有效样本数据")
         sys.exit(1)
 
-    # === 构建 scores_summary 结构（与 ReportService.write_scores_summary 一致） ===
-    # 收集 seen_samples
+    # === 构建 seen_samples 并复用 ReportService.write_scores_summary 写入 ===
+    # （与正式报告路径同一写出点：含顶层 e2e 对齐 + 中断标注 + excluded 合并）
     seen_samples = {}
     for sr in report_data.get("sample_results", []):
         sid = sr["sample_id"]
@@ -62,35 +66,9 @@ def main():
         if plat not in seen_samples[sid]["platforms"]:
             seen_samples[sid]["platforms"].append(plat)
 
-    # 合并 excluded_samples
-    all_samples = dict(seen_samples)
-    excluded_samples = report_data.get("excluded_samples", [])
-    for exc in excluded_samples:
-        sid = exc.get("sample_id")
-        if not sid or sid in all_samples:
-            continue
-        plat_raw = exc.get("platform", "")
-        platforms = [p.strip() for p in str(plat_raw).split(",") if p.strip()]
-        all_samples[sid] = {
-            "sample_id": sid,
-            "platforms": platforms,
-            "scores_path": f"{sid}/scores.json",
-            "excluded": True,
-        }
-
-    scores_summary = {
-        "meta": report_data.get("meta", {}),
-        "summary": report_data.get("summary", {}),
-        "top_level_summary": report_data.get("top_level_summary", {}),
-        "cross_platform_comparison": report_data.get("cross_platform_comparison", {}),
-        "samples": list(all_samples.values()),
-    }
-    if excluded_samples:
-        scores_summary["excluded_samples"] = excluded_samples
-    scores_summary["schema_version"] = "2.0"
-
-    # === 写入 ===
-    write_scores_summary(workspace_dir, scores_summary)
+    ReportService(workspace_dir).write_scores_summary(
+        report_data, seen_samples, schema_version="2.0",
+    )
     print(f"已写入: {workspace_dir / 'report' / 'scores_summary.json'}")
 
     # === 读取新值验证 ===

@@ -191,6 +191,12 @@ class TestInjectedFields:
             "review_issues",
         }
 
+    def test_missing_execution_overview_does_not_trigger_analysis(self, workspace: Path):
+        (workspace / "execution_overview.json").unlink()
+        data = _report_data()
+        Reporter().render_html_from_data(data, workspace_dir=workspace)
+        assert "execution_overview" not in data
+
     def test_command_history_is_a_list(self, workspace: Path):
         data = _report_data()
         Reporter().render_html_from_data(data, workspace_dir=workspace)

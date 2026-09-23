@@ -15,7 +15,6 @@ import re
 from pathlib import Path
 
 from ..utils.logging import get_logger
-from ..workspace._safe_io import atomic_write_json
 
 logger = get_logger(__name__)
 
@@ -49,7 +48,58 @@ _REBUILT_TOP_LEVEL_METRICS = (
     "mean_stability_score",
     "mean_duration_ms",
     "mean_aesthetics_score",
+    # e2e 计数一并从重建结果同步：重建的 per_platform 与顶层 e2e 同源于
+    # platform_e2e（按 _is_tc_passed 统计），避免顶层走聚合器 passed-only 计数、
+    # per_platform 走重建 status-aware 计数而产生的单次运行不收敛。
+    "e2e_pass",
+    "e2e_count",
+    "e2e_pass_rate",
 )
+
+
+def _as_e2e_int(value) -> int:
+    """将 e2e 计数安全转为 int：仅接受数值，其余（None/字符串/bool）一律 0。
+
+    历史文件中可能存在字符串值（如 ``"12"``），直接 ``int()`` 会抛
+    ValueError，导致整个 scores_summary.json 不写；这里降级为 0 并用
+    与其他模块（execution / report_backfill / report_rebuild）一致的空值
+    口径（而非 None）。
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 0
+    return int(value)
+
+
+def _sync_top_level_e2e_from_per_platform(report_data: dict) -> None:
+    """以 per_platform 为准重算顶层 e2e_pass/e2e_count/e2e_pass_rate（原地）。
+
+    顶层与 per_platform 的 e2e 计数可能来自不同源/不同时机（聚合器按
+    ``passed`` 计数，backfill_platform_e2e / rebuild 按 ``status==PASS or passed``
+    计数），导致两者不一致、需多次运行才收敛。本函数在写出前把顶层强制
+    对齐到 per_platform 的汇总（数学上顶层 e2e 总量即各平台之和）。
+
+    仅当 per_platform 确实携带 e2e 统计时才重算，避免在 per_platform 无
+    e2e 数据时把有效的顶层值误清零；对已一致的正常批次为无操作。
+    数值转换前经 ``isinstance`` 校验（见 :func:`_as_e2e_int`），历史文件
+    中的非法值降级为 0 而非抛出。
+    """
+    tls = report_data.get("top_level_summary")
+    if not isinstance(tls, dict):
+        return
+    per_platform = tls.get("per_platform")
+    if not isinstance(per_platform, dict) or not per_platform:
+        return
+    plat_entries = [v for v in per_platform.values() if isinstance(v, dict)]
+    if not any(("e2e_count" in v or "e2e_pass" in v) for v in plat_entries):
+        return
+
+    e2e_pass = sum(_as_e2e_int(v.get("e2e_pass")) for v in plat_entries)
+    e2e_count = sum(_as_e2e_int(v.get("e2e_count")) for v in plat_entries)
+    tls["e2e_pass"] = e2e_pass
+    tls["e2e_count"] = e2e_count
+    tls["e2e_pass_rate"] = (
+        round(e2e_pass / e2e_count * 100, 1) if e2e_count > 0 else 0
+    )
 
 
 def _sync_rebuilt_top_level_metrics(report_data: dict, rebuilt: dict) -> bool:
@@ -266,6 +316,7 @@ class ReportService:
             schema_version: Optional schema version string (workspace mode passes "2.0").
         """
         from ..workspace.report_data import write_scores_summary
+        from . import report_backfill as backfill
 
         scores_summary_meta = report_data.get("meta", {})
         # 确保 meta 包含 platform 字符串格式
@@ -292,6 +343,17 @@ class ReportService:
                     "excluded": True,
                 }
 
+        # 收敛保证：顶层 e2e_pass/e2e_count 与 per_platform 读同一解析后的源。
+        # write_scores_files / backfill_platform_e2e / rebuild 同步可能只更新
+        # per_platform 而遗留顶层旧值（persist_sample 格式下表现为顶层 e2e_pass=0、
+        # per_platform 正确，需跑第二次才收敛）。此处在唯一写出点以 per_platform
+        # 为准重算顶层，保证单次运行即收敛；对已一致的正常批次为无操作。
+        # 失败仅 warning 降级，不阻断 scores_summary.json 写出。
+        try:
+            _sync_top_level_e2e_from_per_platform(report_data)
+        except Exception as exc:  # noqa: BLE001 — 对齐失败不阻断报告写出
+            logger.warning("顶层 e2e 对齐 per_platform 失败，保留原值: %s", exc)
+
         scores_summary = {
             "meta": scores_summary_meta,
             "summary": report_data.get("summary", {}),
@@ -305,6 +367,20 @@ class ReportService:
             scores_summary["excluded_samples"] = excluded_samples
         if schema_version:
             scores_summary["schema_version"] = schema_version
+
+        # 中断/部分完成标注（只增不改：附加三个顶层字段，既有字段语义与位置不动）。
+        # 判定以 execution_manifest.json 的 summary 是否存在未终结项为主
+        # （running/pending > 0 或 completed+failed+skipped < total，failed 属正常
+        # 终结），最新非 report 阶段 run 的 command.json finished_at /
+        # result_summary.json 缺失为辅。
+        try:
+            interruption = backfill.detect_run_interruption(self.workspace)
+            scores_summary["interrupted"] = bool(interruption.get("interrupted", False))
+            scores_summary["completed_samples"] = int(interruption.get("completed_samples", 0) or 0)
+            scores_summary["total_samples"] = int(interruption.get("total_samples", 0) or 0)
+        except Exception as exc:  # noqa: BLE001 — 标注失败不阻断报告写出
+            logger.warning("中断状态检测失败，跳过 interrupted 标注: %s", exc)
+
         write_scores_summary(self.workspace, scores_summary)
         logger.info("Wrote scores_summary.json")
 
@@ -626,26 +702,6 @@ class ReportService:
             logger.info("Consolidated all sample_report.json files")
         except Exception as e:
             logger.warning("Failed to consolidate sample_report.json files: %s", e)
-
-        # 执行概览分析（429错误统计与子Agent分析）
-        try:
-            import sys as _sys
-            _scripts_dir = str(Path(__file__).resolve().parent.parent.parent / "scripts")
-            if _scripts_dir not in _sys.path:
-                _sys.path.insert(0, _scripts_dir)
-            from analyze_execution import analyze_workspace as _analyze_workspace
-            result = _analyze_workspace(str(workspace_dir))
-            if isinstance(result, dict) and result:
-                # 同步带入报告数据，静态报告页“执行总览”区块直接消费
-                report_data["execution_overview"] = result
-                # 持久化到工作区，评测完成时即生成，避免依赖报告页兜底现算；写失败不中断报告流程
-                overview_path = Path(workspace_dir) / "execution_overview.json"
-                try:
-                    atomic_write_json(overview_path, result, ensure_ascii=False, indent=2)
-                except Exception as e:
-                    logger.warning("执行概览写入失败 %s: %s", overview_path, e)
-        except Exception as exc:
-            logger.exception("执行概览分析失败: %s", exc)
 
         # [DEPRECATED] report_data.json 写入已废弃，新格式请使用 scores_summary.json
 
