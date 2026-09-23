@@ -87,6 +87,181 @@ def build_excluded_summary(excluded_pairs, sample_overall) -> list[dict]:
     return rows
 
 
+def detect_run_interruption(workspace_dir: Path) -> dict:
+    """检测批次运行是否被中断 / 仅部分完成，供 scores_summary.json 标注。
+
+    判定来源（任一成立即 ``interrupted=True``）：
+
+    * **主**：``execution_manifest.json`` 的 ``summary`` 存在未终结项——
+      ``running > 0`` 或 ``pending > 0`` 或
+      ``completed + failed + skipped < total``。failed/skipped 属于正常
+      终结状态（manifest 的 completed 要求 generate+evaluate 全部
+      completed，失败样本是正常终结而非中断），不能据此判定中断。
+    * **辅**：最新一次非 report 阶段 run（``runs/latest`` 或时间戳最大的
+      run 目录，跳过 ``phase`` 为 ``report`` 的目录——报告阶段 run 在
+      report 执行期间必然未收尾，纳入考察会导致 interrupted 恒真）的
+      ``command.json`` 中 ``finished_at`` 为 null，或该 run 目录缺少
+      ``result_summary.json``——说明收尾未正常落盘（进程被 kill / OOM / 超时）。
+
+    ``completed_samples`` / ``total_samples`` 为**去重样本数**：manifest
+    items 中 ``overall_status == completed`` 的不同 sample_id 数 / 全部
+    不同 sample_id 数（items 是样本×平台粒度，同一 sample_id 会出现多次）；
+    manifest 缺失或损坏时回退为 0（此时仅依据 run 收尾状态判定 interrupted）。
+
+    本函数永不抛出：所有文件读取/解析均有保护，异常仅记录日志。
+
+    Args:
+        workspace_dir: 工作区根目录。
+
+    Returns:
+        ``{"interrupted": bool, "completed_samples": int, "total_samples": int}``
+    """
+    workspace_dir = Path(workspace_dir)
+    interrupted = False
+    completed_samples = 0
+    total_samples = 0
+
+    # === 主判据：execution_manifest.json 存在未终结项 ===
+    manifest_path = workspace_dir / "execution_manifest.json"
+    try:
+        manifest_raw = _read_json(manifest_path) if manifest_path.exists() else None
+    except (OSError, ValueError) as exc:
+        logger.warning("读取 execution_manifest.json 失败 (%s): %s", manifest_path, exc)
+        manifest_raw = None
+    if isinstance(manifest_raw, dict):
+        summary = manifest_raw.get("summary")
+        if isinstance(summary, dict):
+            def _as_int(value) -> int:
+                return value if isinstance(value, int) and not isinstance(value, bool) else 0
+
+            total = _as_int(summary.get("total"))
+            completed = _as_int(summary.get("completed"))
+            failed = _as_int(summary.get("failed"))
+            skipped = _as_int(summary.get("skipped"))
+            running = _as_int(summary.get("running"))
+            pending = _as_int(summary.get("pending"))
+            if total > 0 and (
+                running > 0
+                or pending > 0
+                or (completed + failed + skipped) < total
+            ):
+                interrupted = True
+
+        # completed_samples / total_samples：去重样本数（items 为样本×平台 pair）
+        items = manifest_raw.get("items")
+        if isinstance(items, list):
+            all_sample_ids: set[str] = set()
+            completed_sample_ids: set[str] = set()
+            for it in items:
+                if not isinstance(it, dict):
+                    continue
+                sid = str(it.get("sample_id", "") or "")
+                if not sid:
+                    continue
+                all_sample_ids.add(sid)
+                if str(it.get("overall_status", "") or "") == "completed":
+                    completed_sample_ids.add(sid)
+            total_samples = len(all_sample_ids)
+            completed_samples = len(completed_sample_ids)
+
+    # === 辅判据：最新非 report 阶段 run 的收尾状态 ===
+    try:
+        latest_run = _resolve_latest_run_dir(workspace_dir)
+    except OSError as exc:
+        logger.warning("解析最新 run 目录失败 (%s): %s", workspace_dir, exc)
+        latest_run = None
+    if latest_run is not None:
+        cmd_path = latest_run / "command.json"
+        cmd_raw = None
+        if cmd_path.exists():
+            try:
+                cmd_raw = _read_json(cmd_path)
+            except (OSError, ValueError) as exc:
+                logger.warning("读取 %s 失败: %s", cmd_path, exc)
+                cmd_raw = None
+        if isinstance(cmd_raw, dict):
+            # finished_at 为 null（或缺失）→ 进程未正常结束
+            if not cmd_raw.get("finished_at"):
+                interrupted = True
+        # 缺少 result_summary.json → 收尾结果未落盘
+        if not (latest_run / "result_summary.json").exists():
+            interrupted = True
+
+    return {
+        "interrupted": interrupted,
+        "completed_samples": completed_samples,
+        "total_samples": total_samples,
+    }
+
+
+def _resolve_latest_run_dir(
+    workspace_dir: Path,
+    *,
+    exclude_run_dir: Path | None = None,
+) -> Path | None:
+    """定位工作区最新一次非 report 阶段的 run 目录。
+
+    ``phase`` 文件内容为 ``report`` 的 run 目录会被跳过（报告阶段自己
+    创建的 run 在报告执行期间必然未收尾，纳入考察会导致中断误判）；
+    ``exclude_run_dir``（resolve 后比较）提供双保险，供调用方排除当前
+    正在执行的 run。优先解析 ``runs/latest`` 符号链接（命中被排除目标
+    时同样回退到扫描）；失败时按时间戳目录名倒序取首个非 report run。
+    找不到任何符合条件的 run 目录时返回 None。
+    """
+    runs_dir = Path(workspace_dir) / "runs"
+    if not runs_dir.is_dir():
+        return None
+
+    exclude_resolved = None
+    if exclude_run_dir is not None:
+        try:
+            exclude_resolved = Path(exclude_run_dir).resolve()
+        except OSError:
+            exclude_resolved = Path(exclude_run_dir)
+
+    def _is_excluded(run_dir: Path) -> bool:
+        # 报告阶段 run 不作为中断判定依据
+        phase_file = run_dir / "phase"
+        try:
+            if phase_file.is_file() and phase_file.read_text(encoding="utf-8").strip() == "report":
+                return True
+        except OSError:
+            pass
+        if exclude_resolved is not None:
+            try:
+                if run_dir.resolve() == exclude_resolved:
+                    return True
+            except OSError:
+                pass
+        return False
+
+    latest_link = runs_dir / "latest"
+    if latest_link.is_symlink() or latest_link.exists():
+        try:
+            resolved = latest_link.resolve()
+        except OSError:
+            resolved = None
+        if resolved is not None and resolved.is_dir() and not _is_excluded(resolved):
+            return resolved
+
+    candidates = []
+    try:
+        for entry in runs_dir.iterdir():
+            if entry.is_symlink() or not entry.is_dir():
+                continue
+            name = entry.name
+            if len(name) == 15 and name[8] == "_" and name.replace("_", "").isdigit():
+                if _is_excluded(entry):
+                    continue
+                candidates.append(entry)
+    except OSError:
+        return None
+    if not candidates:
+        return None
+    candidates.sort(key=lambda p: p.name, reverse=True)
+    return candidates[0]
+
+
 def filter_run_by_manifest(run, excluded_pairs):
     """过滤 EvalRun.prompt_results，只保留 manifest 未标记为 failed/skipped 的条目。"""
     if not excluded_pairs:

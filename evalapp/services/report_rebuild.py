@@ -278,6 +278,24 @@ def rebuild_report_data_from_samples(workspace: Path) -> dict | None:
         list(platform_scores.keys())[0] if platform_scores else "unknown"
     )
 
+    # 顶层 E2E 总量 = 各平台 platform_e2e 之和（与 per_platform 同源，
+    # 保证 _sync_rebuilt_top_level_metrics 同步后顶层与 per_platform 一致）。
+    # 求和前按 per_platform_means 的键取交集过滤：platform_e2e 可能含
+    # 「只有 e2e 明细、无有效评分」的平台（不在 per_platform_means 中），
+    # 若计入顶层会造成顶层与 per_platform 不同源，与 reporting.py 写出前
+    # 的 _sync_top_level_e2e_from_per_platform 重算互相打架、单次运行不收敛。
+    _scored_platforms = set(per_platform_means.keys())
+    total_e2e_pass = sum(
+        v["e2e_pass"] for k, v in platform_e2e.items() if k in _scored_platforms
+    )
+    total_e2e_count = sum(
+        v["e2e_count"] for k, v in platform_e2e.items() if k in _scored_platforms
+    )
+    total_e2e_pass_rate = (
+        round(total_e2e_pass / total_e2e_count * 100, 1)
+        if total_e2e_count > 0 else None
+    )
+
     # === 7. 构建输出结构 ===
     # 生成一个稳定的 run_id（基于工作区路径），确保前端 reportResetKey 在数据加载后必然变化
     run_id = f"rebuilt_{hashlib.md5(str(workspace).encode()).hexdigest()[:12]}"
@@ -309,7 +327,9 @@ def rebuild_report_data_from_samples(workspace: Path) -> dict | None:
             "mean_duration_ms": global_means.get("mean_duration_ms", 0),
             "mean_token_total": global_means.get("mean_token_total", 0),
             "mean_cost_usd": global_means.get("mean_cost_usd"),
-            "e2e_pass_rate": global_means.get("e2e_pass_rate", 0),
+            "e2e_pass": total_e2e_pass,
+            "e2e_count": total_e2e_count,
+            "e2e_pass_rate": total_e2e_pass_rate,
             "per_platform": per_platform_means,
         },
         "sample_results": sample_results_data,

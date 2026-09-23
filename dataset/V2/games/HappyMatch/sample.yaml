@@ -2,6 +2,8 @@ version: "2.0"
 sample_id: HappyMatch
 title: 开心消消乐
 app_type: 游戏
+requires_backend: false
+requires_auth: false
 game_category: 消除类
 dataset_version: "v2"
 status: active

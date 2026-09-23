@@ -116,11 +116,9 @@ def _merge_item(
         # else: keep disk version (do not let stale memory regress disk)
     merged["phases"] = out_phases
 
-    # overall_status — priority-based.
-    mem_overall = memory_item.get("overall_status", PHASE_PENDING)
-    disk_overall = merged.get("overall_status", PHASE_PENDING)
-    if _status_priority(mem_overall) > _status_priority(disk_overall):
-        merged["overall_status"] = mem_overall
+    # Recompute overall_status from the merged phases (the memory/disk
+    # snapshots' overall_status values are pre-merge artifacts).
+    merged["overall_status"] = ExecutionManifest._compute_overall_status(merged)
 
     return merged
 

@@ -327,9 +327,9 @@ def run_single_test(
         show_browser: When True, run browser in headed mode (visible);
             when False (default), append ``--headless`` for web platform tests.
     """
-    steps_text = build_steps_text(tc, platform=platform)
+    steps_text = build_steps_text(tc, platform=platform, requires_backend=requires_backend)
     assertion_text = tc.expected_result or tc.description
-    if platform == "miniprogram":
+    if not requires_backend:
         assertion_text += (
             "（判断标准："
             "数据为模拟数据或占位符不影响判定）"
@@ -523,25 +523,22 @@ def run_single_test(
         )
 
 
-def build_steps_text(tc: TestCase, platform: str = "") -> str:
+def build_steps_text(tc: TestCase, platform: str = "", requires_backend: bool = False) -> str:
     """Build a natural language steps description for ai-ui-test."""
-    if platform == "miniprogram":
-        guidance = (
-            "【执行说明】这是AI生成的应用，请以验证目标为准灵活执行。"
-            "(1) 按钮/导航的文案和位置可能与参考操作不同，寻找语义相近的元素；"
-            "(2) 如果某个功能完全不存在（找不到入口），跳过该步骤并继续；"
-            "(3) 数据为占位符或模拟数据时，只要UI结构存在即视为功能可用。\n"
+    guidance_parts = [
+        "【执行说明】这是AI生成的应用，请以验证目标为准灵活执行。",
+        "(1) 按钮/导航的文案和位置可能与参考操作不同，寻找语义相近的元素；",
+    ]
+    if not requires_backend:
+        guidance_parts.append(
+            "(2) 数据为占位符或模拟数据时，只要UI结构存在即视为功能可用。"
         )
-        goal = f"验证目标：{tc.description}"
-        if tc.steps:
-            hints = [step.split(" -> 预期:")[0].strip() for step in tc.steps]
-            return guidance + goal + "\n参考操作路径（仅供参考，实际界面可能不同）：" + "，".join(hints)
-        return guidance + goal
-
+    guidance = "".join(guidance_parts) + "\n"
+    goal = f"验证目标：{tc.description}"
     if tc.steps:
-        actions = [step.split(" -> 预期:")[0].strip() for step in tc.steps]
-        return "，".join(actions)
-    return tc.description
+        hints = [step.split(" -> 预期:")[0].strip() for step in tc.steps]
+        return guidance + goal + "\n参考操作路径（仅供参考，实际界面可能不同）：" + "，".join(hints)
+    return guidance + goal
 
 
 def parse_ai_ui_test_output(output: str) -> dict | None:
@@ -1022,15 +1019,44 @@ def build_and_serve_h5(
 
     shell_project = Path(project_path)
 
+    def _pkg_has_build_web(pkg: Path) -> bool:
+        """True if *pkg* is a readable package.json with a build:web script.
+
+        Robust against malformed files: corrupt JSON, non-object top level,
+        ``scripts`` being null or a non-dict (e.g. a string, where ``in``
+        would silently do substring matching) all yield False.
+        """
+        try:
+            data = json.loads(pkg.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return False
+        if not isinstance(data, dict):
+            return False
+        scripts = data.get("scripts")
+        return isinstance(scripts, dict) and "build:web" in scripts
+
     # Generator H5: the actual Vite project may live in a shell_project/
     # subdirectory under the generated project root.  If package.json is
     # absent at the root but present inside shell_project/, redirect.
-    if not (shell_project / "package.json").is_file():
+    #
+    # expo_web 兜底防御（capability/ 干扰目录问题，2026-09-17）：生成器可能在
+    # 项目根旁生成仅含 test 脚本的辅助目录（如 capability/）。若根目录
+    # package.json 存在但缺少 build:web 脚本，同样重定向到 shell_project/，
+    # 避免后续 `npm run build:web` 报 "Missing script"。
+    root_pkg = shell_project / "package.json"
+    root_pkg_unusable = not root_pkg.is_file() or (
+        platform == "expo_web" and not _pkg_has_build_web(root_pkg)
+    )
+    if root_pkg_unusable:
         _subdir = shell_project / "shell_project"
-        if (_subdir / "package.json").is_file():
+        _subdir_pkg = _subdir / "package.json"
+        if _subdir_pkg.is_file() and (
+            platform != "expo_web" or _pkg_has_build_web(_subdir_pkg)
+        ):
             logger.info(
-                "package.json not found at project root, using "
+                "package.json %s at project root, using "
                 "shell_project/ subdirectory: %s",
+                "missing" if not root_pkg.is_file() else "lacks build:web script",
                 _subdir,
             )
             shell_project = _subdir

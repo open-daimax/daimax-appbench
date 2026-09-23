@@ -888,10 +888,42 @@ class Evaluator:
     def _persist_sample_scores(
         self, sample: EvalSample, platform: str, result: PromptResult
     ) -> None:
-        """样本×平台评测完成后立即将评分持久化到 ``sample_scores.json``。
+        """样本×平台评测完成后立即持久化该样本的评测产物。
+
+        落盘三类文件：
+
+        * ``sample_scores.json`` — 完整 PromptResult 快照（历史行为）
+        * ``evaluation.json`` / ``scores.json`` — 报告与聚合器直接消费的两个
+          文件。以前它们只在整批评测正常返回后的 ``persist_all`` 里写，
+          进程被中断（kill / OOM / 超时）时已完成样本的结果会停留在上一轮
+          的旧文件里，报告阶段再基于旧数据重写一次，UI 就显示假 0 分。
+          现在逐样本实时写入，中断也不丢数据（全量跑时 ``persist_all``
+          幂等覆盖）。
 
         写入失败仅记录 warning，不中断评测主流程。
         """
+        from datetime import datetime as _datetime
+
+        # 同一完成事件只取一次时间戳，传给 scores.json 与 sample_scores.json，
+        # 使两文件的 updated_at 严格相等：聚合器新鲜度仲裁在相等时一律选
+        # 信息更完整的 scores.json，避免跨秒边界时非确定性地选中降级
+        # 转换结构（丢 backend_completeness 等字段，可复发假 0 分）。
+        now = _datetime.now().isoformat(timespec="seconds")
+
+        # 逐样本实时落盘 evaluation.json + scores.json（与 persist_all 共用
+        # 序列化逻辑）。放在 model_dump 之前，避免序列化失败时早退跳过。
+        try:
+            from ...services.evaluation import EvaluationService
+
+            EvaluationService(self.workspace_path).persist_sample(
+                result, updated_at=now,
+            )
+        except Exception as exc:  # noqa: BLE001 — 单样本落盘失败不阻断评测
+            logger.warning(
+                "Failed to immediately persist evaluation/scores for %s/%s: %s",
+                sample.sample_id, platform, exc,
+            )
+
         try:
             prompt_payload = result.model_dump(mode="json")
         except Exception as exc:  # pragma: no cover - 防御性分支
@@ -927,6 +959,7 @@ class Evaluator:
                 platform,
                 prompt_result=prompt_payload,
                 scores=scores_summary,
+                updated_at=now,
             )
         except Exception as exc:
             logger.warning(

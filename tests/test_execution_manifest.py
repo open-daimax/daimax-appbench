@@ -21,6 +21,7 @@ from evalapp.evaluation.execution_manifest import (
     PHASE_FAILED,
     PHASE_PENDING,
     PHASE_RUNNING,
+    _merge_item,
 )
 
 
@@ -268,3 +269,78 @@ class TestForceResetItems:
         s2 = next(it for it in reloaded._data["items"] if it["sample_id"] == "s2")
         assert s1["overall_status"] == PHASE_PENDING
         assert s2["phases"]["generate"]["status"] == PHASE_COMPLETED
+
+
+class TestMergeItemCrossProcess:
+    """Tests for _merge_item cross-process merge: overall_status is recomputed from merged phases."""
+
+    def test_cross_process_both_phases_completed(self):
+        """Process A completed generate, Process B completed evaluate → overall_status=completed."""
+        # Process A: generate=completed, evaluate=pending
+        memory_item = _make_item("s1", "expo_web", {
+            "generate": {"status": PHASE_COMPLETED},
+            "evaluate": {"status": PHASE_PENDING},
+        })
+        assert memory_item["overall_status"] == PHASE_PENDING
+
+        # Process B (disk): generate=pending, evaluate=completed
+        disk_item = _make_item("s1", "expo_web", {
+            "generate": {"status": PHASE_PENDING},
+            "evaluate": {"status": PHASE_COMPLETED},
+        })
+        assert disk_item["overall_status"] == PHASE_PENDING
+
+        merged = _merge_item(memory_item, disk_item)
+
+        # Both phases merged to completed → overall must be completed
+        assert merged["phases"]["generate"]["status"] == PHASE_COMPLETED
+        assert merged["phases"]["evaluate"]["status"] == PHASE_COMPLETED
+        assert merged["overall_status"] == PHASE_COMPLETED
+
+    def test_cross_process_one_phase_failed(self):
+        """One process failed a phase → overall_status=failed even if other phase completed."""
+        memory_item = _make_item("s1", "expo_web", {
+            "generate": {"status": PHASE_COMPLETED},
+            "evaluate": {"status": PHASE_PENDING},
+        })
+
+        disk_item = _make_item("s1", "expo_web", {
+            "generate": {"status": PHASE_PENDING},
+            "evaluate": {"status": PHASE_FAILED, "error": "eval crash"},
+        })
+
+        merged = _merge_item(memory_item, disk_item)
+
+        assert merged["phases"]["generate"]["status"] == PHASE_COMPLETED
+        assert merged["phases"]["evaluate"]["status"] == PHASE_FAILED
+        assert merged["overall_status"] == PHASE_FAILED
+
+    def test_cross_process_one_phase_running(self):
+        """If one phase is still running after merge → overall_status=running."""
+        memory_item = _make_item("s1", "expo_web", {
+            "generate": {"status": PHASE_COMPLETED},
+            "evaluate": {"status": PHASE_PENDING},
+        })
+
+        disk_item = _make_item("s1", "expo_web", {
+            "generate": {"status": PHASE_PENDING},
+            "evaluate": {"status": PHASE_RUNNING},
+        })
+
+        merged = _merge_item(memory_item, disk_item)
+
+        assert merged["phases"]["generate"]["status"] == PHASE_COMPLETED
+        assert merged["phases"]["evaluate"]["status"] == PHASE_RUNNING
+        assert merged["overall_status"] == PHASE_RUNNING
+
+    def test_merge_disk_none_returns_memory_copy(self):
+        """disk_item=None → deep copy of memory_item with correct overall_status."""
+        memory_item = _make_item("s1", "expo_web", {
+            "generate": {"status": PHASE_COMPLETED},
+            "evaluate": {"status": PHASE_COMPLETED},
+        })
+
+        merged = _merge_item(memory_item, None)
+
+        assert merged is not memory_item
+        assert merged["overall_status"] == PHASE_COMPLETED

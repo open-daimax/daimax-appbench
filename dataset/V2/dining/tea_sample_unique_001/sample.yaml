@@ -1,0 +1,10 @@
+version: '1.0'
+sample_id: tea_sample_unique_001
+title: Tea Sample
+app_type: 餐饮
+requires_backend: false
+requires_auth: false
+requirement: ''
+core_functions: []
+constraints: []
+notes: ''

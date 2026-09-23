@@ -2,6 +2,8 @@ version: "2.0"
 sample_id: PomodoroTimer
 title: 番茄钟
 app_type: 工具
+requires_backend: false
+requires_auth: false
 dataset_version: "v2"
 data_mode: "frontend_only"
 
@@ -65,6 +67,6 @@ core_functions:
   - 清空历史记录
   - 空状态展示
 
-constraints: "纯前台计时；历史数据存localStorage；关闭页面后不恢复；精度±500ms"
+constraints: "纯前台计时；历史数据存localStorage；关闭页面后不恢复；精度±500ms；纯前端应用无需后端与登录注册功能"
 
 notes: "纯前端番茄钟应用。重点验证倒计时精度、状态自动切换逻辑、暂停继续、长休息触发、设置生效等功能。"

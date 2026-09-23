@@ -16,6 +16,16 @@ from ..workspace._safe_io import atomic_write_json
 logger = get_logger(__name__)
 
 
+def _now_local_iso() -> str:
+    """本地时区的秒级 ISO 时间戳。
+
+    与 :func:`..workspace.sample_data.write_sample_scores` 写入的 ``updated_at``
+    格式保持一致（naive 本地时间），使 scores.json 与 sample_scores.json 的
+    内容时间戳可直接比较（聚合器新鲜度判定依赖此约定）。
+    """
+    return datetime.now().isoformat(timespec="seconds")
+
+
 def is_static_resource(req: dict) -> bool:
     """判断是否为静态资源（与 executor.ts 中 isStaticResource 保持一致）"""
     url = req.get("url", "").lower()
@@ -70,61 +80,170 @@ class EvaluationService:
     def __init__(self, workspace: Path):
         self.workspace = Path(workspace)
 
+    def _build_platform_evaluation(self, pr) -> dict:
+        """从单个 PromptResult 构建 evaluation.json 的平台级数据块。
+
+        ``persist_evaluation_results``（批次收尾全量写）与 ``persist_sample``
+        （逐样本实时写）共用此序列化逻辑，保证两条路径产出的 schema 一致。
+        """
+        platform_data = {
+            "build_status": "skipped",
+            "install_status": "skipped",
+            "launch_status": "skipped",
+            "stability_metrics": {},
+            "test_results": [],
+        }
+
+        if pr.result_data:
+            rd = pr.result_data
+            platform_data["build_status"] = getattr(rd, "build_status", "skipped") or "skipped"
+            platform_data["install_status"] = getattr(rd, "install_status", "skipped") or "skipped"
+            platform_data["launch_status"] = getattr(rd, "launch_status", "skipped") or "skipped"
+            sm = getattr(rd, "stability_metrics", None)
+            if sm:
+                platform_data["stability_metrics"] = {
+                    "crash_count": getattr(sm, "crash_count", 0),
+                    "anr_count": getattr(sm, "anr_count", 0),
+                    "crash_free": getattr(sm, "crash_free", True),
+                    "stability_score": getattr(sm, "stability_score", 100.0),
+                    "white_screen_count": getattr(sm, "white_screen_count", 0),
+                    "white_screen_evidence": getattr(sm, "white_screen_evidence", []),
+                }
+
+        for tr in pr.test_results or []:
+            tc_id = getattr(tr, "test_case_id", "")
+            tc_screenshots = self._find_tc_screenshots(pr.sample_id, pr.platform, tc_id)
+            # TestCaseResult 模型没有 description/failure_reason 字段，通用描述
+            # 存于 details；序列化时映射过去（模型未来加字段则优先取模型字段）
+            details = getattr(tr, "details", "")
+            platform_data["test_results"].append({
+                "test_case_id": tc_id,
+                "passed": tr.passed,
+                "description": getattr(tr, "description", "") or details,
+                "failure_reason": getattr(tr, "failure_reason", "") or (details if not tr.passed else ""),
+                "report_path": getattr(tr, "report_path", ""),
+                "screenshots": tc_screenshots,
+            })
+
+        return platform_data
+
     def persist_evaluation_results(self, run) -> None:
         """将评测结果持久化到 evaluation.json（每个样本一个文件）。
+
+        逐平台增量合并（``merge_evaluation_platform``）而非整文件覆盖：
+        单平台评测（``--platform``）或分平台多进程时，整文件覆盖会抹除
+        本次 run 未包含的其他平台数据，与 scores.json 的合并语义不一致。
+        确需整体重置的调用方请直接使用 ``write_evaluation``。
 
         Args:
             run: EvalRun 对象，包含 prompt_results 列表
         """
-        from ..workspace.sample_data import write_evaluation
+        from ..workspace.sample_data import merge_evaluation_platform
 
-        evaluation_by_sample: dict[str, dict] = {}
         for pr in run.prompt_results:
-            sid = pr.sample_id
-            if sid not in evaluation_by_sample:
-                evaluation_by_sample[sid] = {"sample_id": sid, "platforms": {}}
+            try:
+                merge_evaluation_platform(
+                    self.workspace, pr.sample_id, pr.platform,
+                    self._build_platform_evaluation(pr),
+                )
+            except Exception as e:
+                logger.warning(
+                    "Failed to write evaluation.json for %s/%s: %s",
+                    pr.sample_id, pr.platform, e,
+                )
+                continue
+            logger.debug("Wrote evaluation.json for %s/%s", pr.sample_id, pr.platform)
 
-            platform_data = {
-                "build_status": "skipped",
-                "install_status": "skipped",
-                "launch_status": "skipped",
-                "stability_metrics": {},
-                "test_results": [],
-            }
+    def _build_platform_scores(self, pr) -> tuple[dict, list[dict]]:
+        """从单个 PromptResult 构建 scores.json 的平台级数据块。
 
-            if pr.result_data:
-                rd = pr.result_data
-                platform_data["build_status"] = getattr(rd, "build_status", "skipped") or "skipped"
-                platform_data["install_status"] = getattr(rd, "install_status", "skipped") or "skipped"
-                platform_data["launch_status"] = getattr(rd, "launch_status", "skipped") or "skipped"
-                sm = getattr(rd, "stability_metrics", None)
-                if sm:
-                    platform_data["stability_metrics"] = {
-                        "crash_count": getattr(sm, "crash_count", 0),
-                        "anr_count": getattr(sm, "anr_count", 0),
-                        "crash_free": getattr(sm, "crash_free", True),
-                        "stability_score": getattr(sm, "stability_score", 100.0),
-                        "white_screen_count": getattr(sm, "white_screen_count", 0),
-                        "white_screen_evidence": getattr(sm, "white_screen_evidence", []),
-                    }
+        Returns:
+            ``(scores_data, runtime_errors)`` 二元组；runtime_errors 仅 expo*
+            平台且提取成功时非空（提取失败仅 warning，返回空列表）。
 
-            for tr in pr.test_results or []:
-                tc_id = getattr(tr, "test_case_id", "")
-                tc_screenshots = self._find_tc_screenshots(sid, pr.platform, tc_id)
-                platform_data["test_results"].append({
-                    "test_case_id": tc_id,
-                    "passed": tr.passed,
-                    "description": getattr(tr, "description", ""),
-                    "failure_reason": getattr(tr, "failure_reason", ""),
-                    "report_path": getattr(tr, "report_path", ""),
-                    "screenshots": tc_screenshots,
-                })
+        ``persist_scores``（批次收尾全量写）与 ``persist_sample``（逐样本实时写）
+        共用此序列化逻辑，保证两条路径产出的 schema 一致。
+        """
+        from ..evaluation.runner.runtime_errors import extract_runtime_errors
 
-            evaluation_by_sample[sid]["platforms"][pr.platform] = platform_data
+        # 从 test_results 中提取后端请求记录（排除静态资源和 HTML 响应）以及页面诊断信息
+        backend_requests = []
+        page_network_errors = []
+        page_http_errors = []
+        page_js_errors = []
+        page_console_errors = []
+        page_diag_summary = {
+            "network_monitor_enabled": False,
+            "total_requests": 0,
+            "network_error_count": 0,
+            "http_error_count": 0,
+            "js_error_count": 0,
+            "console_error_count": 0,
+            "console_warn_count": 0,
+        }
+        if pr.test_results:
+            for tr in pr.test_results:
+                if not tr.verifications:
+                    continue
+                if pr.requires_backend and "real_backend" in tr.verifications:
+                    rb = tr.verifications["real_backend"]
+                    if isinstance(rb, dict) and rb.get("requests"):
+                        for req in rb["requests"]:
+                            if not is_static_resource(req) and not is_html_response(req):
+                                backend_requests.append(req)
+                page_diag = tr.verifications.get("page_diagnostics")
+                if isinstance(page_diag, dict):
+                    summary = page_diag.get("summary") or {}
+                    for key in page_diag_summary:
+                        value = summary.get(key, 0)
+                        if key == "network_monitor_enabled":
+                            page_diag_summary[key] = bool(page_diag_summary[key] or value)
+                        elif isinstance(value, (int, float)):
+                            page_diag_summary[key] += value
+                    page_network_errors.extend(page_diag.get("network_errors") or [])
+                    page_http_errors.extend(page_diag.get("http_errors") or [])
+                    page_js_errors.extend(page_diag.get("js_errors") or [])
+                    page_console_errors.extend(page_diag.get("console_errors") or [])
 
-        for sid, eval_data in evaluation_by_sample.items():
-            write_evaluation(self.workspace, sid, eval_data)
-            logger.debug("Wrote evaluation.json for %s", sid)
+        page_diagnostics_summary = {
+            **page_diag_summary,
+            "pass": (
+                page_diag_summary["network_error_count"] == 0
+                and page_diag_summary["http_error_count"] == 0
+                and page_diag_summary["js_error_count"] == 0
+                and page_diag_summary["console_error_count"] == 0
+            ),
+        }
+
+        scores_data = {
+            "success_rate_score": pr.success_rate.composite_score if pr.success_rate else 0.0,
+            "quality_score": pr.quality.composite_score if pr.quality else 0.0,
+            "experience_score": pr.experience.composite_score if pr.experience else 0.0,
+            "stability_score": pr.quality.stability_score if pr.quality else 0.0,
+            "launch_screenshot": "",
+            "requires_backend": pr.requires_backend,
+            "backend_completeness": pr.quality.backend_completeness if pr.quality else None,
+            "backend_completeness_reason": pr.quality.backend_completeness_reason if pr.quality else "",
+            "backend_requests": backend_requests,
+            "page_diagnostics_summary": page_diagnostics_summary,
+            "page_network_errors": page_network_errors[:50],
+            "page_http_errors": page_http_errors[:50],
+            "page_js_errors": page_js_errors[:50],
+            "page_console_errors": page_console_errors[:50],
+        }
+
+        # Expo 平台：提取运行时错误（整段 try/except 不阻断评分主流程）
+        runtime_errors: list[dict] = []
+        if pr.platform.startswith("expo"):
+            try:
+                runtime_errors = extract_runtime_errors(pr.test_results or []) or []
+            except Exception as e:
+                logger.warning(
+                    "Failed to extract runtime errors for %s/%s: %s",
+                    pr.sample_id, pr.platform, e,
+                )
+
+        return scores_data, runtime_errors
 
     def persist_scores(self, run) -> None:
         """将评分结果持久化到 scores.json（每个样本一个文件）。
@@ -135,95 +254,25 @@ class EvaluationService:
         Args:
             run: EvalRun 对象
         """
-        from ..evaluation.runner.runtime_errors import extract_runtime_errors
         from ..workspace.sample_data import write_runtime_errors, write_scores
 
+        now = _now_local_iso()
         scores_by_sample: dict[str, dict] = {}
         # sid -> {platform: errors}；仅 expo 平台
         runtime_errors_by_sample: dict[str, dict[str, list[dict]]] = {}
         for pr in run.prompt_results:
             sid = pr.sample_id
             if sid not in scores_by_sample:
-                scores_by_sample[sid] = {"sample_id": sid, "platforms": {}}
+                # updated_at：本次评测落盘时间，供聚合器判定 scores.json 与
+                # sample_scores.json 的新鲜度（避免报告阶段重写后旧壳掊盖新数据）
+                scores_by_sample[sid] = {
+                    "sample_id": sid, "updated_at": now, "platforms": {},
+                }
 
-            # 从 test_results 中提取后端请求记录（排除静态资源和 HTML 响应）以及页面诊断信息
-            backend_requests = []
-            page_network_errors = []
-            page_http_errors = []
-            page_js_errors = []
-            page_console_errors = []
-            page_diag_summary = {
-                "network_monitor_enabled": False,
-                "total_requests": 0,
-                "network_error_count": 0,
-                "http_error_count": 0,
-                "js_error_count": 0,
-                "console_error_count": 0,
-                "console_warn_count": 0,
-            }
-            if pr.test_results:
-                for tr in pr.test_results:
-                    if not tr.verifications:
-                        continue
-                    if pr.requires_backend and "real_backend" in tr.verifications:
-                        rb = tr.verifications["real_backend"]
-                        if isinstance(rb, dict) and rb.get("requests"):
-                            for req in rb["requests"]:
-                                if not is_static_resource(req) and not is_html_response(req):
-                                    backend_requests.append(req)
-                    page_diag = tr.verifications.get("page_diagnostics")
-                    if isinstance(page_diag, dict):
-                        summary = page_diag.get("summary") or {}
-                        for key in page_diag_summary:
-                            value = summary.get(key, 0)
-                            if key == "network_monitor_enabled":
-                                page_diag_summary[key] = bool(page_diag_summary[key] or value)
-                            elif isinstance(value, (int, float)):
-                                page_diag_summary[key] += value
-                        page_network_errors.extend(page_diag.get("network_errors") or [])
-                        page_http_errors.extend(page_diag.get("http_errors") or [])
-                        page_js_errors.extend(page_diag.get("js_errors") or [])
-                        page_console_errors.extend(page_diag.get("console_errors") or [])
-
-            page_diagnostics_summary = {
-                **page_diag_summary,
-                "pass": (
-                    page_diag_summary["network_error_count"] == 0
-                    and page_diag_summary["http_error_count"] == 0
-                    and page_diag_summary["js_error_count"] == 0
-                    and page_diag_summary["console_error_count"] == 0
-                ),
-            }
-
-            scores_data = {
-                "success_rate_score": pr.success_rate.composite_score if pr.success_rate else 0.0,
-                "quality_score": pr.quality.composite_score if pr.quality else 0.0,
-                "experience_score": pr.experience.composite_score if pr.experience else 0.0,
-                "stability_score": pr.quality.stability_score if pr.quality else 0.0,
-                "launch_screenshot": "",
-                "requires_backend": pr.requires_backend,
-                "backend_completeness": pr.quality.backend_completeness if pr.quality else None,
-                "backend_completeness_reason": pr.quality.backend_completeness_reason if pr.quality else "",
-                "backend_requests": backend_requests,
-                "page_diagnostics_summary": page_diagnostics_summary,
-                "page_network_errors": page_network_errors[:50],
-                "page_http_errors": page_http_errors[:50],
-                "page_js_errors": page_js_errors[:50],
-                "page_console_errors": page_console_errors[:50],
-            }
+            scores_data, runtime_errors = self._build_platform_scores(pr)
             scores_by_sample[sid]["platforms"][pr.platform] = scores_data
-
-            # Expo 平台：提取运行时错误（整段 try/except 不阻断评分主流程）
-            if pr.platform.startswith("expo"):
-                try:
-                    errors = extract_runtime_errors(pr.test_results or [])
-                    if errors:
-                        runtime_errors_by_sample.setdefault(sid, {})[pr.platform] = errors
-                except Exception as e:
-                    logger.warning(
-                        "Failed to extract runtime errors for %s/%s: %s",
-                        sid, pr.platform, e,
-                    )
+            if runtime_errors:
+                runtime_errors_by_sample.setdefault(sid, {})[pr.platform] = runtime_errors
 
         for sid, scores_entry in scores_by_sample.items():
             write_scores(self.workspace, sid, scores_entry)
@@ -242,6 +291,76 @@ class EvaluationService:
                         "Failed to write runtime_errors.json for %s/%s: %s",
                         sid, platform, e,
                     )
+
+    def persist_sample(self, pr, *, updated_at: str | None = None) -> None:
+        """单个样本×平台评测完成后立即落盘 evaluation.json + scores.json。
+
+        背景：``persist_all`` 只在整批评测正常返回后执行，进程被中断
+        （kill / OOM / 超时）时不会运行，已完成样本的结果就停留在上一轮的
+        旧文件里；后续报告阶段基于旧 evaluation.json 重写 scores.json，
+        UI 便显示假 0 分。逐样本实时落盘后，中断也不丢已完成样本的数据。
+
+        与 ``persist_all`` 共用同一套序列化逻辑（``_build_platform_evaluation`` /
+        ``_build_platform_scores``），全量跑时 ``persist_all`` 幂等覆盖；写入均为
+        平台级增量合并，同一样本的其他平台数据不会被抹除。
+        美观度评分（VL 模型调用，耗时）仍由 ``persist_all`` 统一处理。
+        写入失败仅记录 warning，不中断评测主流程。
+
+        Args:
+            pr: 单个 PromptResult 对象
+            updated_at: 可选的秒级 ISO 时间戳，写入 scores.json 的
+                ``updated_at``。同一完成事件同时写 sample_scores.json 时应
+                传入同一时间戳，使两文件时间戳严格相等，避免跨秒边界时
+                新鲜度仲裁非确定性地选中信息更少的降级转换结构；
+                缺省取当前本地时间。
+        """
+        from ..workspace.sample_data import (
+            merge_evaluation_platform,
+            write_runtime_errors,
+            write_scores,
+        )
+
+        sid = pr.sample_id
+        platform = pr.platform
+
+        try:
+            merge_evaluation_platform(
+                self.workspace, sid, platform,
+                self._build_platform_evaluation(pr),
+            )
+            logger.debug("Immediately wrote evaluation.json for %s/%s", sid, platform)
+        except Exception as e:
+            logger.warning(
+                "Failed to immediately write evaluation.json for %s/%s: %s",
+                sid, platform, e,
+            )
+
+        runtime_errors: list[dict] = []
+        try:
+            scores_data, runtime_errors = self._build_platform_scores(pr)
+            write_scores(self.workspace, sid, {
+                "sample_id": sid,
+                "updated_at": updated_at or _now_local_iso(),
+                "platforms": {platform: scores_data},
+            })
+            logger.debug("Immediately wrote scores.json for %s/%s", sid, platform)
+        except Exception as e:
+            logger.warning(
+                "Failed to immediately write scores.json for %s/%s: %s",
+                sid, platform, e,
+            )
+
+        if runtime_errors:
+            try:
+                write_runtime_errors(self.workspace, sid, platform, runtime_errors)
+                logger.debug(
+                    "Immediately wrote runtime_errors.json for %s/%s", sid, platform,
+                )
+            except Exception as e:
+                logger.warning(
+                    "Failed to write runtime_errors.json for %s/%s: %s",
+                    sid, platform, e,
+                )
 
     def persist_backend_traces(self, run) -> None:
         """将后端评测过程记录持久化到 backend_trace_{platform}.json。
@@ -524,6 +643,39 @@ class EvaluationService:
                 return gen
         return default
 
+    @staticmethod
+    def resolve_generator_adapter(workspace, generator_name: str) -> str:
+        """解析实际用于实例化生成器的适配器名。
+
+        第三方平台产物以来源名称作为 ``generator`` 持久化，供报告展示真实来源；
+        真正的执行适配器按产物形态记录在 meta.json 的 ``generator_adapter``
+        字段（例如链接或安装包适配器）。来源名称不在 ``GeneratorRegistry``
+        中注册，直接
+        实例化会抛 Unknown generator，故未注册时回落到适配器名。
+
+        已注册的名称优先返回，保证 ``--generator`` 的显式覆盖语义不被
+        meta.json 干扰；无适配器记录时保持原名，交由 ``get_generator``
+        抛出带安装指引的原始错误。
+        """
+        from ..generators import is_generator_registered
+
+        if is_generator_registered(generator_name):
+            return generator_name
+        try:
+            from ..workspace.meta import load_meta
+            meta = load_meta(Path(workspace)) or {}
+        except Exception as e:
+            logger.debug("读取 meta.json 解析生成器适配器失败: %s", e)
+            return generator_name
+        adapter = meta.get("generator_adapter") or ""
+        if adapter and adapter != generator_name:
+            logger.info(
+                "生成器 %r 未注册，按 meta.json generator_adapter 回落为 %r",
+                generator_name, adapter,
+            )
+            return adapter
+        return generator_name
+
     def regenerate_retest_report(
         self,
         all_results,
@@ -761,7 +913,10 @@ class EvaluationService:
 
         # 初始化评测组件
         tc_store = TestCaseStore(samples_dirs)
-        generator = get_generator(generator_name, config)
+        # 实例化用适配器名（三方产物品牌名需回落），generator_name 保持品牌名用于报告展示
+        generator = get_generator(
+            self.resolve_generator_adapter(self.workspace, generator_name), config
+        )
 
         # 加载或创建 execution manifest
         local_manifest = manifest
@@ -935,11 +1090,14 @@ class EvaluationService:
         for tr in pr.test_results or []:
             tc_id = getattr(tr, "test_case_id", "")
             tc_screenshots = self._find_tc_screenshots(pr.sample_id, pr.platform, tc_id)
+            # 与 _build_platform_evaluation 保持一致：details 映射到
+            # description（通用描述）与 failure_reason（仅失败时）
+            details = getattr(tr, "details", "")
             results.append({
                 "test_case_id": tc_id,
                 "passed": tr.passed,
-                "description": getattr(tr, "description", ""),
-                "failure_reason": getattr(tr, "failure_reason", ""),
+                "description": getattr(tr, "description", "") or details,
+                "failure_reason": getattr(tr, "failure_reason", "") or (details if not tr.passed else ""),
                 "report_path": getattr(tr, "report_path", ""),
                 "screenshots": tc_screenshots,
             })
@@ -1064,7 +1222,9 @@ class EvaluationService:
 
         all_results = []
         tc_store = TestCaseStore(samples_dirs)
-        generator = get_generator(generator_name, config)
+        generator = get_generator(
+            self.resolve_generator_adapter(self.workspace, generator_name), config
+        )
 
         evaluator = Evaluator(
             generator,
