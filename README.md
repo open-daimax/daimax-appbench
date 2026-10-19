@@ -12,6 +12,14 @@
 
 English | [中文](README.zh-CN.md)
 
+<a href="https://star-history.com/#open-daimax/daimax-appbench&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
+ </picture>
+</a>
+
 </div>
 
 <div align="center">
@@ -296,24 +304,6 @@ Contributions of all kinds are welcome — new metrics, dataset samples, platfor
 daimax-appbench comes out of [DAIMAX](https://www.daimax.cn/), an AI-powered app factory: describe an app in natural language and the platform handles requirement breakdown, UI design, code generation, live preview, and iteration — delivering mini-programs, H5, and cross-platform apps.
 
 This benchmark is how we keep our own generated apps honest. If that sounds useful, come try it at [www.daimax.cn](https://www.daimax.cn/).
-
----
-
-## Star History
-
-daimax-appbench has been collecting stars at a steady clip since its first release. The snapshot below shows its growth curve on [star-history.com](https://star-history.com); the live chart underneath keeps updating as new stars come in:
-
-<div align="center">
-<img src="docs/images/star-history.png" alt="daimax-appbench star growth snapshot on star-history.com" width="960"/>
-</div>
-
-<a href="https://star-history.com/#open-daimax/daimax-appbench&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
- </picture>
-</a>
 
 ---
 
