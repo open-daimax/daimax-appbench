@@ -299,6 +299,24 @@ daimax-appbench 出自 [袋马 DAIMAX](https://www.daimax.cn/zh-CN)——一个 
 
 ---
 
+## Star 历史
+
+自首次发布以来，daimax-appbench 的 Star 一直保持较快增长。下图为 [star-history.com](https://star-history.com) 上的增长曲线快照，其后的实时图表会随 Star 数持续更新：
+
+<div align="center">
+<img src="docs/images/star-history.png" alt="daimax-appbench 在 star-history.com 上的 Star 增长快照" width="960"/>
+</div>
+
+<a href="https://star-history.com/#open-daimax/daimax-appbench&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
+ </picture>
+</a>
+
+---
+
 ## 许可证
 
 daimax-appbench 基于 [Apache License, Version 2.0](LICENSE) 发布。

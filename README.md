@@ -299,6 +299,24 @@ This benchmark is how we keep our own generated apps honest. If that sounds usef
 
 ---
 
+## Star History
+
+daimax-appbench has been collecting stars at a steady clip since its first release. The snapshot below shows its growth curve on [star-history.com](https://star-history.com); the live chart underneath keeps updating as new stars come in:
+
+<div align="center">
+<img src="docs/images/star-history.png" alt="daimax-appbench star growth snapshot on star-history.com" width="960"/>
+</div>
+
+<a href="https://star-history.com/#open-daimax/daimax-appbench&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=open-daimax/daimax-appbench&type=Date" />
+ </picture>
+</a>
+
+---
+
 ## License
 
 daimax-appbench is released under the [Apache License, Version 2.0](LICENSE).
