@@ -389,3 +389,28 @@ design-samples = "my_package.commands:design_samples_cmd"
 | `navigation` | 页面导航与路由 |
 
 历史优先级值（`high`、`medium`、`low`）加载时自动归一化。
+
+## Web 源码质量采集
+
+`collect_code_quality_metrics(project_path, "web")` 支持 ESLint 静态扫描、
+JavaScript/TypeScript 复杂度（lizard）与重复率（jscpd）。必须提供本地项目源码；
+只有部署 URL 时无法进行源码静态分析。
+
+先按项目锁文件安装开发依赖。Web 扫描只使用项目根目录的
+`node_modules/.bin/eslint`，不会自动下载或使用全局版本。优先识别根目录的
+`eslint.config.{js,mjs,cjs,ts,mts,cts}`，其次是 `.eslintrc`、`.eslintrc.*`
+或 `package.json` 的 `eslintConfig`。项目安装的 ESLint 必须支持对应格式；
+旧配置需要仍支持 eslintrc 的版本。
+
+Flat 配置自行定义文件范围和解析器，包括配置后的 JSX/TSX、Vue；旧模式扫描
+`.js,.jsx,.mjs,.cjs,.ts,.tsx,.vue`，对应解析器和插件由项目提供。默认排除依赖、
+构建、发布和覆盖率目录，不使用 `--fix`。工具运行时会加载项目的配置与插件。
+
+缺少配置或本地工具时，`scan_results` 会保留 `tool="eslint"`、`success=false`
+和以 `Skipped:` 开头的 `error_message`。超时、配置或执行失败、空报告与异常格式
+也不会当作干净扫描。符合格式的退出码 1 表示发现 lint 问题；退出码 2 表示工具失败，
+遵循 [ESLint 退出码约定](https://eslint.org/docs/latest/use/command-line-interface#exit-codes)。
+只有包含文件结果的有效报告才会记为成功。
+
+本次不调整评分权重或缺失数据的回退规则；扫描缺失不能获得静态规范分，复杂度和
+重复率继续独立处理。比较项目时仍需统一工具版本及 lint 规则。

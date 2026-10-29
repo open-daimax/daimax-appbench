@@ -7,6 +7,7 @@ Supported tools:
 - Android: Android Lint (``./gradlew lint``), optional detekt
 - iOS: SwiftLint (``swiftlint lint``)
 - Mini-program: ESLint (``npx eslint``)
+- Web: project-local ESLint with project-owned flat or legacy configuration
 - Cross-platform: lizard (cyclomatic complexity), jscpd (duplication)
 """
 
@@ -55,7 +56,7 @@ def collect_code_quality_metrics(
 
     Args:
         project_path: Path to the generated project root.
-        platform: ``"android"``, ``"ios"``, or ``"miniprogram"``.
+        platform: ``"android"``, ``"ios"``, ``"miniprogram"``, or ``"web"``.
         tool_timeout: Maximum seconds for each tool invocation.
         cc_threshold: Cyclomatic complexity threshold for flagging functions.
         skip_complexity: If True, skip complexity analysis (e.g. lizard not installed).
@@ -75,6 +76,8 @@ def collect_code_quality_metrics(
         scan_results.append(
             run_swiftlint(project_path, timeout=tool_timeout)
         )
+    elif platform == "web":
+        scan_results.append(run_web_eslint(project_path, timeout=tool_timeout))
     elif platform == "miniprogram":
         scan_results.append(
             run_eslint(project_path, timeout=tool_timeout)
@@ -320,6 +323,84 @@ def _parse_swiftlint_json(json_text: str) -> StaticScanResult:
 
 
 # ---------------------------------------------------------------------------
+# Web ESLint
+# ---------------------------------------------------------------------------
+
+
+def run_web_eslint(
+    project_path: str, *, timeout: int = _DEFAULT_TOOL_TIMEOUT
+) -> StaticScanResult:
+    """Lint a Web source project with its installed ESLint and configuration.
+
+    Discover flat or legacy configuration in the project root, preferring flat
+    config. Do not install dependencies, infer rules, or fall back to a global
+    tool. Missing prerequisites are returned as unsuccessful scans with reasons.
+    Flat configs own file/parser selection; legacy configs receive Web extensions.
+    """
+    project_root = Path(project_path).resolve()
+    flat_config = any(
+        (project_root / name).is_file()
+        for name in ("eslint.config.js", "eslint.config.mjs", "eslint.config.cjs",
+                     "eslint.config.ts", "eslint.config.mts", "eslint.config.cts")
+    )
+    legacy_config = any(
+        (project_root / name).is_file()
+        for name in (".eslintrc", ".eslintrc.js", ".eslintrc.cjs",
+                     ".eslintrc.json", ".eslintrc.yaml", ".eslintrc.yml")
+    )
+    if not flat_config and not legacy_config:
+        package = project_root / "package.json"
+        if package.is_file():
+            try:
+                data = json.loads(package.read_text(encoding="utf-8"))
+                legacy_config = isinstance(data, dict) and isinstance(data.get("eslintConfig"), dict)
+            except (OSError, ValueError) as exc:
+                return StaticScanResult(tool="eslint", error_message=f"Cannot read package.json: {exc}")
+    if not flat_config and not legacy_config:
+        return StaticScanResult(
+            tool="eslint", error_message=(
+                "Skipped: no project-root ESLint configuration found "
+                "(eslint.config.*, .eslintrc.*, or package.json eslintConfig)"
+            ),
+        )
+
+    executable = project_root / "node_modules" / ".bin" / "eslint"
+    if not executable.is_file():
+        return StaticScanResult(
+            tool="eslint", error_message=(
+                "Skipped: project-local ESLint not installed; install the project's "
+                "locked development dependencies before collecting Web code quality"
+            ),
+        )
+    cmd = [str(executable), "--format", "json"]
+    if not flat_config:
+        cmd.extend(["--ext", ".js,.jsx,.mjs,.cjs,.ts,.tsx,.vue"])
+    for pattern in ("dist/**", "build/**", "coverage/**", "node_modules/**"):
+        cmd.extend(["--ignore-pattern", pattern])
+    cmd.append(".")
+    env = _clean_env()
+    env["ESLINT_USE_FLAT_CONFIG"] = "true" if flat_config else "false"
+    try:
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout,
+            cwd=str(project_root), env=env,
+        )
+    except subprocess.TimeoutExpired:
+        return StaticScanResult(tool="eslint", error_message=f"ESLint timed out after {timeout}s")
+    except OSError as exc:
+        return StaticScanResult(tool="eslint", error_message=f"Cannot execute project-local ESLint: {exc}")
+    # ESLint exit 1 means findings, whereas 2 (or other codes) is a tool failure.
+    if proc.returncode not in (0, 1):
+        return StaticScanResult(
+            tool="eslint", error_message=(
+                f"ESLint exited with code {proc.returncode}: "
+                f"{(proc.stderr or '').strip()[:1000]}"
+            ),
+        )
+    return _parse_eslint_json(proc.stdout or "")
+
+
+# ---------------------------------------------------------------------------
 # ESLint (mini-program)
 # ---------------------------------------------------------------------------
 
@@ -410,11 +491,8 @@ def _parse_eslint_json(json_text: str) -> StaticScanResult:
     info_count = 0
 
     if not json_text.strip():
-        # No output usually means no files matched or eslint was not configured
         return StaticScanResult(
-            tool="eslint",
-            success=True,
-            error_message="",
+            tool="eslint", success=False, error_message="ESLint produced no output",
         )
 
     try:
@@ -425,6 +503,25 @@ def _parse_eslint_json(json_text: str) -> StaticScanResult:
             success=False,
             error_message=f"Failed to parse ESLint JSON: {exc}",
         )
+
+    if not isinstance(file_results, list) or not file_results:
+        return StaticScanResult(
+            tool="eslint", error_message="ESLint returned no file results or an invalid report array",
+        )
+    for entry in file_results:
+        if (not isinstance(entry, dict)
+                or not isinstance(entry.get("messages"), list)
+                or not isinstance(entry.get("filePath", ""), str)):
+            return StaticScanResult(tool="eslint", error_message="Invalid ESLint file result")
+        for message in entry["messages"]:
+            if (not isinstance(message, dict)
+                    or message.get("severity") not in (0, 1, 2)
+                    or not isinstance(message.get("message"), str)
+                    or (message.get("ruleId") is not None
+                        and not isinstance(message["ruleId"], str))
+                    or any(message.get(key) is not None and not isinstance(message[key], int)
+                           for key in ("line", "column"))):
+                return StaticScanResult(tool="eslint", error_message="Invalid ESLint message")
 
     for file_result in file_results:
         file_path = file_result.get("filePath", "")
@@ -445,8 +542,8 @@ def _parse_eslint_json(json_text: str) -> StaticScanResult:
                 severity=severity,
                 message=msg.get("message", ""),
                 file=file_path,
-                line=msg.get("line", 0),
-                column=msg.get("column", 0),
+                line=msg.get("line") or 0,
+                column=msg.get("column") or 0,
                 source="eslint",
             ))
 
@@ -470,6 +567,7 @@ _LANG_EXTENSIONS: dict[str, list[str]] = {
     "android": [".kt", ".java"],
     "ios": [".swift"],
     "miniprogram": [".js", ".ts"],
+    "web": [".js", ".ts", ".jsx", ".tsx"],
 }
 
 
@@ -610,6 +708,7 @@ _JSCPD_FORMAT_MAP: dict[str, str] = {
     "android": "kotlin,java",
     "ios": "swift,objectivec",
     "miniprogram": "javascript,typescript",
+    "web": "javascript,typescript,jsx,tsx",
 }
 
 

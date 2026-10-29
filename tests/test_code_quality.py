@@ -128,7 +128,7 @@ class TestCollectCodeQualityMetrics:
     def test_unsupported_platform_returns_metrics(self, tmp_path):
         """不支持的平台应返回空 metrics（不抛异常）。"""
         result = collect_code_quality_metrics(
-            str(tmp_path), "web",
+            str(tmp_path), "unsupported",
             skip_complexity=True,
             skip_duplication=True,
         )
