@@ -41,8 +41,9 @@ def test_default_config():
     assert cfg.build_app.build_type == "debug"
     assert cfg.install_app.auto_install is False
     assert cfg.models.e2e.api_key == ""
-    # 美观度模型未显式配置时回退硬编码默认值 qwen-vl-max（见 config.py 默认值逻辑）
-    assert cfg.models.aesthetics.name == "qwen-vl-max"
+    # No implicit aesthetics provider: environment is resolved at scoring time.
+    assert cfg.models.aesthetics.name == ""
+    assert cfg.models.aesthetics.base_url == ""
     # 通用（生成器无关）配置项默认值：均为空，不内置任何生成器特判
     assert cfg.runtime_error_source == ""
     assert cfg.excluded_workspace_dirs == []

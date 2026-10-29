@@ -13,7 +13,7 @@
 # Target platforms to evaluate. Accepts any of: web, android, ios.
 platforms: [web]
 
-# AI model slots. Only two are needed for a basic run:
+# AI model slots: E2E is required for tests; aesthetics is optional.
 #   - e2e:        vision model driving the Midscene E2E UI test (executes each step + asserts)
 #   - aesthetics: VL model that scores runtime screenshots for UI aesthetics
 # Any OpenAI-compatible endpoint works.
@@ -23,6 +23,6 @@ models:
     base_url: ""   # OpenAI-compatible endpoint — leave empty to use env var MIDSCENE_MODEL_BASE_URL
     name: ""       # Model name, e.g. gpt-4o — leave empty to use env var MIDSCENE_MODEL_NAME
   aesthetics:
-    api_key: ""    # Aesthetics VL model API key — leave empty to use env var DASHSCOPE_API_KEY
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"  # default DashScope endpoint
-    name: "qwen-vl-max"  # default aesthetics model — override via env var AESTHETICS_MODEL
+    api_key: ""    # Optional; env: AESTHETICS_API_KEY (legacy: DASHSCOPE_API_KEY)
+    base_url: ""   # Set explicitly, or use AESTHETICS_BASE_URL; no provider default
+    name: ""       # Set explicitly, or use AESTHETICS_MODEL; missing means scoring is skipped

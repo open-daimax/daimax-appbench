@@ -230,9 +230,9 @@ models:
     name: ""          # 模型名称（环境变量 MIDSCENE_MODEL_NAME）
     family: ""        # 模型系列标识（环境变量 MIDSCENE_MODEL_FAMILY）
   aesthetics:
-    api_key: ""       # 美观度 VL 模型 Key（环境变量 DASHSCOPE_API_KEY）
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    name: "qwen-vl-max"   #（环境变量 AESTHETICS_MODEL）
+    api_key: ""       # 可选；留空读取 AESTHETICS_API_KEY，兼容 DASHSCOPE_API_KEY
+    base_url: ""      # Explicit endpoint / AESTHETICS_BASE_URL; no provider default
+    name: ""          # 显式模型名或 AESTHETICS_MODEL；无默认模型
     family: ""
 ```
 

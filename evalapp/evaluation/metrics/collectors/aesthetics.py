@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .aesthetics_frames import select_key_frames
-from .aesthetics_scorer import ModelConfig, ScoringResult, score_frames
+from .aesthetics_scorer import ModelConfig, ScoringResult, score_frames, validate_model_config
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,26 @@ def score_aesthetics(
     if model_config is None:
         model_config = _default_model_config()
 
+    try:
+        validate_model_config(model_config)
+    except ValueError as exc:
+        logger.warning(
+            "Aesthetics scoring skipped: %s. Set models.aesthetics.base_url/name "
+            "or AESTHETICS_BASE_URL and AESTHETICS_MODEL; no model request was sent.",
+            exc,
+        )
+        _write_trace(sample_dir, platform, frames, model_config, None, str(exc),
+                     skip_reason="model_not_configured")
+        return None
+
+    # Log only the host, never URL credentials, paths, query tokens or API keys.
+    from urllib.parse import urlsplit
+    try:
+        host = urlsplit(model_config.base_url).hostname or "<configured endpoint>"
+    except ValueError:
+        host = "<configured endpoint>"
+    logger.info("Aesthetics scoring: model=%s, endpoint_host=%s", model_config.name, host)
+
     # 3. 调用 VL 模型评分
     error_msg: str | None = None
     scoring_result: ScoringResult | None = None
@@ -97,17 +117,9 @@ def score_aesthetics(
 
 
 def _default_model_config() -> ModelConfig:
-    """从环境变量获取默认模型配置（last-resort 兜底）。
-
-    优先级：调用方传入 config.models.aesthetics > 环境变量 > 硬编码默认值。
-    本函数仅在调用方未提供 model_config 时使用（env var → hardcoded）。
-    """
-    import os
-    return ModelConfig(
-        base_url=os.environ.get("AESTHETICS_BASE_URL") or "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        api_key=os.environ.get("DASHSCOPE_API_KEY") or "",
-        name=os.environ.get("AESTHETICS_MODEL") or "qwen-vl-max",
-    )
+    """Resolve explicit environment values without a provider/model fallback."""
+    from .aesthetics_config import resolve_model_config
+    return resolve_model_config()
 
 
 def _write_trace(
@@ -117,12 +129,16 @@ def _write_trace(
     model_config: ModelConfig,
     scoring_result: ScoringResult | None,
     error: str | None,
+    *,
+    skip_reason: str | None = None,
 ) -> None:
     """写入 trace 文件用于调试和审计。"""
     trace_path = Path(sample_dir) / f"aesthetics_trace_{platform}.json"
 
     trace = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "skipped" if skip_reason else "completed" if scoring_result else "failed",
+        "skip_reason": skip_reason,
         "rule_version": "1.0",
         "platform": platform,
         "selected_frames": [str(f) for f in frames],

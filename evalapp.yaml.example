@@ -10,7 +10,7 @@ results_dir: results
 # 统一模型配置表（按用途槽位）
 # - e2e:        Midscene E2E UI 测试视觉模型
 # - aesthetics: 美观度 VL 评分模型
-# 优先级：evalapp.yaml 显式配置 > 环境变量 > 硬编码默认值（见 config.py）
+# 美观度模型优先级：显式配置 > 环境变量；未配置端点/模型时跳过，不选择默认服务商。
 models:
   e2e:
     api_key: ""                     # Midscene 视觉模型 API Key（环境变量 MIDSCENE_MODEL_API_KEY 可覆盖）
@@ -18,9 +18,9 @@ models:
     name: ""                        # 模型名称，如 gpt-4o（环境变量 MIDSCENE_MODEL_NAME 可覆盖）
     family: ""                      # 模型系列标识（环境变量 MIDSCENE_MODEL_FAMILY 可覆盖）
   aesthetics:
-    api_key: ""                     # 美观度 VL 评分 API Key（环境变量 DASHSCOPE_API_KEY 可覆盖）
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"  # 默认 DashScope
-    name: "qwen-vl-max"             # 默认 qwen-vl-max（环境变量 AESTHETICS_MODEL 可覆盖）
+    api_key: ""                     # 留空读取 AESTHETICS_API_KEY（兼容 DASHSCOPE_API_KEY）
+    base_url: ""                    # 显式填写兼容端点，或设置 AESTHETICS_BASE_URL
+    name: ""                        # 显式填写视觉模型名，或设置 AESTHETICS_MODEL
     family: ""                      # 预留
 
 # Codex CLI 应用生成器（可选）

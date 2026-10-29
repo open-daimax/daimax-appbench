@@ -112,7 +112,7 @@ class ModelsConfig(BaseModel):
 
     Slots:
       * ``e2e``        — Midscene E2E UI test vision model (requires api_key/base_url/name/family).
-      * ``aesthetics`` — Aesthetics scoring model (only name needed; empty uses tool default).
+      * ``aesthetics`` — Optional aesthetics model; endpoint/name must be configured or supplied via environment.
 
     Legacy fields ``ai_ui_test.model_*`` and ``claude.aesthetics_model`` are still
     recognized; when models is not explicitly configured, values are back-filled
@@ -310,13 +310,6 @@ class Config(BaseModel):
         if not self.models.aesthetics.name and self.claude.aesthetics_model:
             self.models.aesthetics.name = self.claude.aesthetics_model
 
-        # ── 美观度模型硬编码默认值（DashScope qwen-vl-max）──
-        # 优先级：显式 YAML 配置 > 旧字段回填 > 硬编码默认值
-        # 确保开源后无 evalapp.yaml 也能开箱即用
-        if not self.models.aesthetics.base_url:
-            self.models.aesthetics.base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        if not self.models.aesthetics.name:
-            self.models.aesthetics.name = "qwen-vl-max"
         return self
 
 

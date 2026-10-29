@@ -58,9 +58,9 @@ cp evalapp.yaml.example evalapp.yaml
 | `models.e2e` | `api_key` | API key for the E2E vision model (env: `MIDSCENE_MODEL_API_KEY`) |
 | `models.e2e` | `base_url` | OpenAI-compatible endpoint URL (env: `MIDSCENE_MODEL_BASE_URL`) |
 | `models.e2e` | `name` | Model name, e.g. `gpt-4o` (env: `MIDSCENE_MODEL_NAME`) |
-| `models.aesthetics` | `api_key` | API key for aesthetics VL model (env: `DASHSCOPE_API_KEY`) |
-| `models.aesthetics` | `base_url` | Model endpoint (default: DashScope) |
-| `models.aesthetics` | `name` | Model name (default: `qwen-vl-max`) |
+| `models.aesthetics` | `api_key` | Optional aesthetics key: explicit value, then `AESTHETICS_API_KEY`, then legacy `DASHSCOPE_API_KEY` |
+| `models.aesthetics` | `base_url` | Explicit endpoint or `AESTHETICS_BASE_URL`; no provider default |
+| `models.aesthetics` | `name` | Explicit vision model or `AESTHETICS_MODEL`; no model default |
 | `ai_ui_test` | `timeout` | E2E test timeout in seconds (default: 300) |
 | `ai_ui_test` | `replan_limit` | Max replanning attempts per test case (default: 20) |
 | `build_app` | `timeout` | Build timeout in seconds (default: 1800) |
@@ -75,6 +75,8 @@ Configuration is resolved in this order (highest priority first):
 1. Explicit values in `evalapp.yaml`
 2. Environment variables
 3. Built-in defaults (defined in `evalapp/config.py`)
+
+Aesthetics scoring requires an explicitly selected endpoint and model (YAML or environment). Missing fields produce a warning and a skipped trace without sending screenshots or inventing a zero score. An explicitly configured local endpoint may omit its API key; no Authorization header is sent in that case. Added configuration logs never include API keys or URL credentials.
 
 ### Minimal Configuration
 

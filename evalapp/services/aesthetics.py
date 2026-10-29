@@ -4,8 +4,14 @@
 evaluate 阶段和 report 阶段共用此模块，避免 DRY 违反。
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..config import Config
+    from ..evaluation.metrics.collectors.aesthetics_scorer import ModelConfig
 
 from ..utils.logging import get_logger
 
@@ -21,37 +27,20 @@ def load_rules(rules_path: Optional[Path] = None) -> Optional[dict]:
     return {"version": "1.0"}
 
 
-def _build_model_config(config=None, model_name: str | None = None):
-    """构建美观度评分模型配置。
+def _build_model_config(
+    config: Config | None = None, model_name: str | None = None,
+) -> ModelConfig:
+    """Resolve explicit config/model overrides, then environment; never select a provider."""
+    from ..evaluation.metrics.collectors.aesthetics_config import resolve_model_config
 
-    优先级：显式 model_name > config.models.aesthetics > 环境变量 > 硬编码默认值
-    """
-    import os
-    from ..evaluation.metrics.collectors.aesthetics_scorer import ModelConfig
-
-    cfg_aes = None
-    if config is not None:
-        cfg_aes = config.models.aesthetics
-    else:
+    if config is None:
         try:
             from ..config import get_config
-            cfg_aes = get_config().models.aesthetics
+            config = get_config()
         except Exception:
-            pass
-
-    if cfg_aes is not None:
-        return ModelConfig(
-            base_url=cfg_aes.base_url or os.environ.get("AESTHETICS_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
-            api_key=cfg_aes.api_key or os.environ.get("DASHSCOPE_API_KEY", ""),
-            name=(model_name or cfg_aes.name) or os.environ.get("AESTHETICS_MODEL", "qwen-vl-max"),
-        )
-
-    # 无 config 兜底：纯环境变量 → 硬编码默认值
-    return ModelConfig(
-        base_url=os.environ.get("AESTHETICS_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
-        api_key=os.environ.get("DASHSCOPE_API_KEY", ""),
-        name=model_name or os.environ.get("AESTHETICS_MODEL", "qwen-vl-max"),
-    )
+            logger.debug("Aesthetics config unavailable; using explicit environment values.")
+    endpoint = config.models.aesthetics if config is not None else None
+    return resolve_model_config(endpoint, model_name=model_name)
 
 
 def score_sample(
@@ -84,7 +73,7 @@ def score_sample(
 
     sample_dir = workspace / sample_id
 
-    # 构造模型配置：config 字段优先 → 环境变量 → 硬编码兜底
+    # 构造模型配置：显式 config / model 字段优先，其次环境变量；不选择默认服务商
     model_config = _build_model_config(config, model_name=model)
 
     try:
@@ -195,7 +184,7 @@ class AestheticsService:
     """美观度评分服务 - config-aware 封装。
 
     提供单一入口来执行美观度评测，evaluate 和 report 阶段共用此服务。
-    模型配置优先级：config.models.aesthetics → 环境变量 → 硬编码默认值。
+    模型配置优先级：显式模型名 → config.models.aesthetics → 环境变量；缺少端点或模型时跳过。
     """
 
     def __init__(self, workspace: Path, config=None):
