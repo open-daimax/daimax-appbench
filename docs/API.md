@@ -388,3 +388,35 @@ Commands are auto-discovered and mounted at startup.
 | `navigation` | Page navigation and routing |
 
 Legacy priority values (`high`, `medium`, `low`) are automatically normalized on load.
+
+## Web source-code quality collection
+
+`collect_code_quality_metrics(project_path, "web")` collects ESLint findings,
+JavaScript/TypeScript complexity (lizard), and duplication (jscpd). This requires
+local source code; a deployed URL alone cannot provide static-analysis evidence.
+
+Web ESLint uses `node_modules/.bin/eslint` from the project root. Install the
+project's locked development dependencies first. The collector never downloads
+ESLint or falls back to a global version. Configuration is discovered in that
+root, preferring `eslint.config.{js,mjs,cjs,ts,mts,cts}` over `.eslintrc`/`.eslintrc.*`
+or `package.json`'s `eslintConfig`. The installed ESLint version must support the
+chosen format; legacy mode requires a version that still supports eslintrc.
+
+Flat configuration controls file patterns and parsers, including JSX/TSX or Vue
+when configured. Legacy mode includes `.js,.jsx,.mjs,.cjs,.ts,.tsx,.vue`; the project
+must provide the required parsers/plugins. The collector excludes dependency,
+build, distribution and coverage directories. It runs read-only linting without
+`--fix`; project configurations/plugins execute as part of the tool invocation.
+
+Missing configuration or a local executable produces a `scan_results` entry with
+`tool="eslint"`, `success=false` and an explicit `Skipped:` reason in
+`error_message`. Timeouts, execution/configuration failures and empty/malformed
+reports also remain unsuccessful. Exit code 1 with a valid file report represents
+lint findings; exit code 2 is a tool failure, per the
+[ESLint CLI contract](https://eslint.org/docs/latest/use/command-line-interface#exit-codes).
+Only a valid nonempty file report can count as a successful scan.
+
+Scoring weights and fallback rules are unchanged. Missing scans receive no static
+compliance credit; complexity and duplication retain their existing independent
+fallbacks. Compare projects under equivalent tool versions and lint rules; adding
+a Web collector does not standardize their configurations.
