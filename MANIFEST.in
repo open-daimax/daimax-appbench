@@ -1,0 +1,8 @@
+include README.zh-CN.md evalapp.yaml.example
+include docs/QuickCheck.md docs/QuickCheck-Maintenance.md docs/quickcheck-sync.json
+include docs/images/quickcheck-examples.json docs/images/quickcheck-*.png
+include scripts/start-quickcheck.sh scripts/sync-quickcheck.py scripts/README.quickcheck.md
+recursive-include report-ui *.json *.js *.jsx *.css *.png *.html
+prune report-ui/node_modules
+prune report-ui/dist
+global-exclude *.py[cod] .DS_Store

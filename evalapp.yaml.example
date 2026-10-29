@@ -71,7 +71,7 @@ mcp:
   # servers:
   #   - name: filesystem
   #     command: npx
-  #     args: ["-y", "@anthropic/mcp-server-filesystem", "/tmp/workspace"]
+  #     args: ["-y", "@anthropic/mcp-server-filesystem", "./workspace"]
   #   - name: remote-api
   #     url: http://localhost:8080/mcp
 
@@ -92,3 +92,31 @@ excluded_workspace_dirs: []
 # 需要运行 SampleAnalyzer.summarize 的生成器名单；空则都不运行
 # 示例：["my-generator"]
 sample_analysis_generators: []
+
+# Shared evaluation output root; explicit --output / --workspace takes precedence.
+workspace_root: ~/eval_app_factory
+
+# Optional QuickCheck; current hierarchical workflow only. See docs/QuickCheck.md.
+quickcheck:
+  model:
+    name: qwen3.8-flash
+    base_url: https://your-provider.example/v1
+    api_key_env: QUICKCHECK_API_KEY
+    request_options:
+      temperature: 0
+      max_tokens: 8000
+      # enable_thinking: false  # Only for providers that support this parameter.
+  model_concurrency: 5
+  deadline_seconds: 120
+  model_seconds: 120
+  model_max_retries: 2
+  web:
+    host: 127.0.0.1
+    port: 8766
+    workers: 5
+    max_queued: 4
+  scoring:
+    overall_weights: {visual: 0.40, information: 0.30, adaptation: 0.30}
+    runtime_penalty_weight: 0.20
+    device_layout_cap: basic
+    adaptation_failed_device_cap: competent

@@ -2,13 +2,13 @@
 
 # daimax-appbench
 
-**An automated benchmark platform for AI-generated applications — featuring built-in evaluation rules, standard sample sets, and layered test cases across a multi-dimensional metric system. A single pipeline automatically handles build, install, E2E testing, and scoring, producing a shareable evaluation report.**
+**An open-source benchmark for AI-generated applications, with fast URL quality checks and a full build, install, E2E testing and scoring pipeline. Built-in rules, sample datasets and layered test cases produce evidence-backed results and shareable reports.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-%E2%89%A53.10-blue.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Android%20%7C%20iOS-green.svg)](#supported-platforms)
 
-[**Quick Start**](docs/QuickStart.md) · [**API Reference**](docs/API.md) · [**Architecture**](docs/Architecture.md) · [**Contributing**](CONTRIBUTING.md) · [**DAIMAX Website**](https://www.daimax.cn/)
+[**QuickCheck**](#quickcheck) · [**Full Evaluation Quick Start**](docs/QuickStart.md) · [**API Reference**](docs/API.md) · [**Architecture**](docs/Architecture.md) · [**Contributing**](CONTRIBUTING.md) · [**DAIMAX Website**](https://www.daimax.cn/)
 
 English | [中文](README.zh-CN.md)
 
@@ -28,9 +28,139 @@ English | [中文](README.zh-CN.md)
 
 ---
 
-## Evaluation Report
+## What is daimax-appbench?
 
-Every run produces a single, self-contained HTML report that scores the generated app across multiple dimensions and lets you drill into each check:
+**daimax-appbench** is an open-source benchmark platform for AI-generated applications, with two complementary evaluation paths:
+
+- **QuickCheck**: submit a deployed Web URL to inspect mobile/desktop first screens, quality scores and specific visible issues.
+- **Full evaluation**: supply a requirement sample and an artifact (URL, Android APK, iOS `.app`, source project or workspace) to run **build → install → E2E tests → multi-dimensional scoring → report**, validating requirements and test cases.
+
+Models are configured by the user. Visual models provide evidence-based judgments while code calculates scores, and compatible model services can be substituted.
+
+> Full evaluation, datasets, rules, E2E orchestration and reports are already open source. QuickCheck is the source addition in this update; older tags or release packages may not include it. Runtime operation does not require internal repositories or company services; bring your own model endpoint.
+
+---
+
+## Key Features
+
+- **Application quick checks** — bounded page-readiness checks with dual-viewport screenshots, evidence-backed quality scores and a local UI; complements the full E2E benchmark
+- **End-to-end pipeline** — build, install, E2E testing, scoring, and reporting in a single command, with zero manual intervention
+- **AI-powered E2E testing** — a vision model executes atomic test steps and replans on the fly when the UI diverges from expectations
+- **Full-evaluation reports** — double-click to open, no server required; total-score cards, per-platform metrics, and per-sample details in one portable file
+- **Curated sample datasets** — V1 (basic regression) and V2 (full-feature evaluation), organized by generation → category → sample
+- **Zero-config artifact evaluation** — pass a URL, APK, or `.app` and get a score immediately, with no knowledge of the internal workspace layout
+- **Pluggable architecture** — register custom generators and CLI subcommands via entry points without touching the core
+
+---
+
+## Choose an evaluation path
+
+Use QuickCheck to inspect visible page quality quickly; use full evaluation to validate requirements and user flows. The rubrics differ, so their total scores are not directly comparable.
+
+| | QuickCheck | Full evaluation |
+|---|---|---|
+| Entry point | `evalapp quickcheck`, `evalapp quickcheck-ui` | `evalapp evaluate` |
+| Input | Deployed Web URL | URL, APK, iOS `.app`, source project, or an existing workspace |
+| Scope | Dual-viewport first screens and observed loading/runtime evidence | Sample-driven E2E steps and assertions; build/install when applicable |
+| Questions answered | Is the loaded page usable, well presented and adapted? What visible problems need attention? | Does the app implement the sample requirements and pass its test cases? |
+| Output | Screenshots, observations, score ledger, JSON results, local review UI | Workspace results, logs, screenshots and portable `report.html` |
+| Budget | Default 120-second total budget, including queued time; incomplete results remain explicit | Depends on the samples, platforms and configured pipeline |
+
+---
+
+<a id="quickcheck"></a>
+
+## QuickCheck: application quick checks
+
+Paste a deployed Web URL to capture mobile and desktop views, inspect ten quality submetrics, and review the score beside screenshots and deduction reasons.
+
+These are **real archived evaluations**, with project names, identifiers and links anonymized. All three used `qwen3.8-flash` and `hierarchical-v8.1`; scores and reported run times are unchanged. The higher example is relative to this set, **not an “excellent” grade**. These examples illustrate report behavior, not a model ranking or a latency guarantee.
+
+| Example | Overall | Visual | Information | Adaptation |
+|---|---:|---:|---:|---:|
+| A · Lower | 48.0 | 45.0 | 60.0 | 40.0 |
+| B · Medium | 62.6 | 59.0 | 70.0 | 60.0 |
+| C · Relatively higher | 72.2 | 75.5 | 70.0 | 70.0 |
+
+<details>
+<summary>Lower-score example · 48.0 · expand screenshot</summary>
+
+![Lower-score example: dual-viewport evidence and score details](docs/images/quickcheck-low.png)
+
+</details>
+
+<details open>
+<summary>Medium-score example · 62.6 · expand screenshot</summary>
+
+![Medium-score example: dual-viewport evidence and score details](docs/images/quickcheck-medium.png)
+
+</details>
+
+<details>
+<summary>Relatively higher-score example · 72.2 · expand screenshot</summary>
+
+![Relatively higher-score example: dual-viewport evidence and score details](docs/images/quickcheck-higher.png)
+
+</details>
+
+### What does QuickCheck inspect?
+
+| Group | Supported submetrics | Evidence and scoring |
+|---|---|---|
+| **Visual & experience design · 40%** | Composition/layout, typography, colors/assets, component details, creative/scene expression | Model judgments grounded in the captured views; explicit issues and quality ratings feed deterministic scoring |
+| **Information · 30%** | Purpose/task efficiency, information organization, action guidance | Visible task entry points, hierarchy, labels and next-step cues |
+| **Device adaptation · 30%** | Mobile layout and desktop layout | Dual-viewport evidence; measured clipping/overflow belongs to its device and is not deducted again from visual quality |
+| **Page access & runtime** | Opening, blank/persistent loading, script exceptions and failed resources | Browser observations; runtime loss reduces the quality score rather than adding another positive weight |
+| **Visible-content checks** | Explicit sexual content, real-money gambling promotion and drug promotion | Evidence-backed violations trigger the configured redline; unknown remains unknown |
+
+Default formula: quality base = visual×40% + information×30% + adaptation×30%; overall = max(0, base − runtime loss×20%). Confirmed redlines may force zero. Unknown evidence does not become a passing result. See the [QuickCheck guide](docs/QuickCheck.md) for per-item weights, evidence boundaries and examples.
+
+### Choose your vision model
+
+QuickCheck is not tied to a model or provider. Set the model name, API base URL and credentials in YAML or the local UI, using a compatible service that supports image input and the required JSON response protocol. **`qwen3.8-flash`** is a recommended starting point: it provided a useful balance of quality, speed and cost in our examples.
+
+Reference experience: **about 30 seconds and ¥0.013 per evaluation (1.3 Chinese fen)**. These are project-provided example timings and a cost estimate, not a fixed quote or latency guarantee. Page complexity, model response time, cache state, token usage, completion requests and provider billing can change the actual figures.
+
+### Install and run
+
+Install the optional browser dependencies:
+
+```bash
+pip install -e '.[quickcheck]'
+python -m playwright install chromium
+cp evalapp.yaml.example evalapp.yaml
+```
+
+Set an OpenAI-compatible vision model in `evalapp.yaml` (already git-ignored). The model, endpoint and scoring rules are configurable; the local UI can save model preferences without returning existing keys to the browser.
+
+```yaml
+workspace_root: ~/eval_app_factory
+quickcheck:
+  model:
+    name: qwen3.8-flash # replace with a vision model available from your provider
+    base_url: https://your-gateway.example/v1
+    api_key_env: QUICKCHECK_API_KEY
+    request_options: {temperature: 0, max_tokens: 8000}
+      # enable_thinking: false  # only if supported by your provider
+  model_concurrency: 5
+  deadline_seconds: 120
+```
+
+```bash
+# Supply QUICKCHECK_API_KEY in your environment, then evaluate a page:
+evalapp quickcheck --url https://example.com --name example
+
+# Local review UI; use any free port:
+evalapp quickcheck-ui --port 8766
+```
+
+The checked-in single-file UI is ready to run: `./scripts/start-quickcheck.sh` serves it with the API and does not require Node.js. To rebuild after changing frontend source, use `QUICKCHECK_BUILD_UI=1 ./scripts/start-quickcheck.sh` (Node.js required). On Linux, install browser system dependencies with `python -m playwright install --with-deps chromium`. See the [QuickCheck guide](docs/QuickCheck.md) for the scoring formula, configuration, one-time missing-field completion and evidence boundaries. A clean content check covers only the visible evidence, not the whole site or legal compliance.
+
+---
+
+## Full Evaluation Report
+
+Every full-evaluation run produces a single, self-contained HTML report that scores the generated app across multiple dimensions and lets you drill into each check:
 
 <div align="center">
 <img src="docs/images/evaluation-report.gif" alt="daimax-appbench evaluation report" width="860"/>
@@ -38,28 +168,9 @@ Every run produces a single, self-contained HTML report that scores the generate
 
 ---
 
-## What is daimax-appbench?
+## Full Evaluation Dimensions
 
-**daimax-appbench** is a benchmark platform for measuring the quality of AI-generated applications. Give it an app requirement sample and a produced artifact — a deployed URL, an Android APK, an iOS `.app`, or a source project — and it runs a fully automated pipeline: **build → install → E2E test → multi-dimensional scoring → evaluation report**.
-
-Testing is driven by a vision model that executes and asserts each step in natural language, and every AI capability (E2E model, aesthetics VL model) is wired in through config, so any OpenAI-compatible service can be dropped in. The whole thing runs from the CLI with no human in the loop.
-
----
-
-## Key Features
-
-- **End-to-end pipeline** — build, install, E2E testing, scoring, and reporting in a single command, with zero manual intervention
-- **AI-powered E2E testing** — a vision model executes atomic test steps and replans on the fly when the UI diverges from expectations
-- **Evaluation reports** — double-click to open, no server required; total-score cards, per-platform metrics, and per-sample details in one portable file
-- **Curated sample datasets** — V1 (basic regression) and V2 (full-feature evaluation), organized by generation → category → sample
-- **Zero-config artifact evaluation** — pass a URL, APK, or `.app` and get a score immediately, with no knowledge of the internal workspace layout
-- **Pluggable architecture** — register custom generators and CLI subcommands via entry points without touching the core
-
----
-
-## Evaluation Dimensions
-
-All scores are on a 0–100 scale. Weights, thresholds, and penalty coefficients are centrally defined as a single source of truth in `evalapp/evaluation/metrics/rules.py`.
+The following full-evaluation scores use a 0–100 scale. Weights, thresholds, and penalty coefficients are centrally defined as a single source of truth in `evalapp/evaluation/metrics/rules.py`.
 
 | Dimension | What it measures | Source |
 |---|---|---|
@@ -95,7 +206,7 @@ Below are results measured with this framework across mainstream AI coding agent
 | **Generation Time** | Sets the iteration rhythm. A few minutes means you can retry and reshape requirements freely; past twenty it becomes "submit a job and wait" | Must be read alongside success rate and completeness — fast but flaky loses to slow but steady |
 | **Aesthetic Score** | The first retention gate for consumer apps; users bounce within seconds over a rough-looking UI | Also determines whether the UI needs a rebuild after delivery |
 
-> Success Rate and Functionality Completeness map to the same-named dimensions in [Evaluation Dimensions](#evaluation-dimensions) above. Backend Completeness is a deduction factor within Functional Completeness, while Generation Time and Aesthetics are components of the Experience dimension — they are broken out here for direct side-by-side comparison.
+> Success Rate and Functionality Completeness map to the same-named dimensions in [Full Evaluation Dimensions](#full-evaluation-dimensions) above. Backend Completeness is a deduction factor within Functional Completeness, while Generation Time and Aesthetics are components of the Experience dimension — they are broken out here for direct side-by-side comparison.
 
 ---
 
@@ -222,7 +333,7 @@ evalapp evaluate --samples-dir ./dataset/V2 --sample-ids TeaCeremony,CoffeeRoast
 
 ---
 
-## Quick Start
+## Full Evaluation Quick Start
 
 **1. Install** — requires Python ≥ 3.10:
 
@@ -255,10 +366,32 @@ When the run finishes, a single-file `report.html` is written to the workspace r
 
 ---
 
+## Evaluation workspaces
+
+New default outputs share `workspace_root` (default `~/eval_app_factory`) instead of creating result directories in the source checkout:
+
+```text
+~/eval_app_factory/
+  quickcheck/          # QuickCheck cases, snapshots, policies and runs
+  evaluations/         # Direct artifact full evaluation; report.html lives here
+  <existing-workspace>/# Existing/custom benchmark workspaces remain unchanged
+```
+
+- `evalapp quickcheck --output /path/to/quickcheck` overrides the QuickCheck directory.
+- `evalapp evaluate --url ... --sample-ids ... --output /path/to/full` overrides the direct-artifact directory.
+- `evalapp evaluate --workspace /path/to/workspace ...` continues to use the explicit workspace. Sample-driven evaluation requires this path; `workspace_root` does not relocate generator source projects.
+- To keep everything local to a checkout, set `workspace_root: ./workspaces`; `/workspaces/` is git-ignored. Relative paths are resolved from the command's working directory.
+
+**Existing data is not moved automatically.** An existing `./quickcheck_output/` using `cases/snapshots/policies/runs` and a full-evaluation `./eval_output/` can still be selected with `--output` and remain git-ignored. Historical flat QuickCheck `qc_*` layouts and retired scoring workflows are not supported by the new core. To reopen an existing QuickCheck workspace, use `evalapp quickcheck-ui --output ./quickcheck_output --port 8766`, or `QUICKCHECK_OUTPUT=./quickcheck_output ./scripts/start-quickcheck.sh`. Do not delete snapshots while their historical results are still needed. Screenshots, URLs and model observations may contain private data; review/redact before sharing a workspace.
+
+---
+
 ## CLI Overview
 
 | Command | Description |
 |---|---|
+| `evalapp quickcheck` | Run a bounded application quality check for a Web URL |
+| `evalapp quickcheck-ui` | Open the local QuickCheck UI and model settings |
 | `evalapp evaluate` | Evaluate an artifact or source project (build → install → E2E → score → report) |
 | `evalapp retest` | Re-run E2E tests and regenerate the report |
 | `evalapp report` | Generate or regenerate the report for a completed run |
@@ -277,6 +410,8 @@ Export keeps native snapshots, report-selected scores and retest observations se
 
 ## Documentation
 
+- [QuickCheck guide](docs/QuickCheck.md) — model settings, submetrics, evidence and artifacts
+- [QuickCheck maintenance](docs/QuickCheck-Maintenance.md) — standalone-core sync workflow
 - [Quick Start Guide](docs/QuickStart.md) · [快速开始](docs/QuickStart.zh-CN.md)
 - [API Reference](docs/API.md) · [API 参考](docs/API.zh-CN.md)
 - [Architecture](docs/Architecture.md) — pipeline, metric formulas, dataset & test-case design

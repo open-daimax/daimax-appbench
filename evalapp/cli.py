@@ -39,6 +39,7 @@ def main(ctx: click.Context, config_path: str | None, verbose: bool, stream_outp
     if stream_output or verbose:
         config.stream_output = True
     ctx.obj["config"] = config
+    ctx.obj["config_path"] = config_path
     ctx.obj["verbose"] = verbose
 
 
@@ -55,6 +56,9 @@ main.add_command(migrate_workspace_cmd)
 main.add_command(retest_cmd)
 main.add_command(history_cmd)
 main.add_command(export_cmd)
+from .commands.quickcheck import quickcheck_cmd, quickcheck_ui_cmd
+main.add_command(quickcheck_cmd)
+main.add_command(quickcheck_ui_cmd)
 
 # 第三方插件命令（如生成仓提供的 generate / design-samples / run）：
 # 通过 entry point 组 "evalapp.commands" 自动发现并注册。

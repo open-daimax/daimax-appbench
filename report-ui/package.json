@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:template": "vite build && cp dist/index.html ../evalapp/evaluation/results/reporting/templates/report_template.html"
+    "build:template": "vite build && cp dist/index.html ../evalapp/evaluation/results/reporting/templates/report_template.html",
+    "dev:quickcheck": "vite --config vite.quickcheck.config.js",
+    "build:quickcheck": "vite build --config vite.quickcheck.config.js"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
