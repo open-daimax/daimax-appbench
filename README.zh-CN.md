@@ -82,26 +82,20 @@
 | B · 中等分 | 62.6 | 59.0 | 70.0 | 60.0 |
 | C · 相对较高分 | 72.2 | 75.5 | 70.0 | 70.0 |
 
-<details>
-<summary>较低分示例 · 48.0 · 展开截图</summary>
+### 较低分示例 · 48.0
 
 ![较低分示例: dual-viewport evidence and score details](docs/images/quickcheck-low.png)
 
-</details>
 
-<details open>
-<summary>中等分示例 · 62.6 · 展开截图</summary>
+### 中等分示例 · 62.6
 
 ![中等分示例: dual-viewport evidence and score details](docs/images/quickcheck-medium.png)
 
-</details>
 
-<details>
-<summary>相对较高分示例 · 72.2 · 展开截图</summary>
+### 相对较高分示例 · 72.2
 
 ![相对较高分示例: dual-viewport evidence and score details](docs/images/quickcheck-higher.png)
 
-</details>
 
 ### 快评支持哪些子指标？
 

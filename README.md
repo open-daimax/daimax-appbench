@@ -82,26 +82,20 @@ These are **real archived evaluations**, with project names, identifiers and lin
 | B · Medium | 62.6 | 59.0 | 70.0 | 60.0 |
 | C · Relatively higher | 72.2 | 75.5 | 70.0 | 70.0 |
 
-<details>
-<summary>Lower-score example · 48.0 · expand screenshot</summary>
+### Lower-score example · 48.0
 
 ![Lower-score example: dual-viewport evidence and score details](docs/images/quickcheck-low.png)
 
-</details>
 
-<details open>
-<summary>Medium-score example · 62.6 · expand screenshot</summary>
+### Medium-score example · 62.6
 
 ![Medium-score example: dual-viewport evidence and score details](docs/images/quickcheck-medium.png)
 
-</details>
 
-<details>
-<summary>Relatively higher-score example · 72.2 · expand screenshot</summary>
+### Relatively higher-score example · 72.2
 
 ![Relatively higher-score example: dual-viewport evidence and score details](docs/images/quickcheck-higher.png)
 
-</details>
 
 ### What does QuickCheck inspect?
 
