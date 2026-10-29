@@ -234,3 +234,17 @@ dataset/
 4. **Plugin architecture**: Generators and commands registered via entry points, no core code changes needed
 5. **Zero manual intervention**: Full pipeline runs unattended in CLI mode
 6. **Reproducibility**: Execution plans and workspace records enable exact re-runs
+
+
+## DevicePool lifecycle and cleanup
+
+Android/iOS device pools separate their short-lived state lock from lifecycle serialization. Initialization builds a private inventory and publishes slots atomically; shutdown closes admission, wakes waiting acquirers, waits for in-flight release cleanup, and detaches owned resource bookkeeping before running slow SDK/process commands outside the state lock.
+
+- `acquire()` returns a distinct lease object. Return that exact object to `release()`; foreign, duplicate and old-generation returns are ignored without running device commands.
+- Waiting callers receive `RuntimeError` when their pool generation closes, rather than waiting for the acquisition timeout or borrowing from a later restart. `TimeoutError` is reserved for a ready pool with no slot before its deadline.
+- Concurrent `initialize()`/`shutdown()` calls are serialized. The pool can be initialized again after a completed shutdown; partial initialization is cleaned before the original error propagates. During initialization/closing, `total_slots()` reports zero and state readers are not blocked by SDK I/O.
+- Shutdown waits for already-running release cleanup, but does not gracefully drain active evaluations. The evaluator must join/stop its workers before calling shutdown. Releases arriving after closing are discarded.
+- Only Android processes created by the pool and iOS simulators booted/cloned by the pool are stopped/deleted. Already-running devices reused by the pool are not owned. Clones remain tracked even if boot fails.
+- Cleanup is best effort: one process/SDK failure is logged without skipping other resources; process exits are reaped after terminate/kill. A completed logical shutdown is not proof that every external device stopped. After OS/SDK errors or force termination (including SIGKILL), inspect and clean residual resources before reuse. Lifecycle operations interrupted before teardown can be retried with `shutdown()`.
+
+The lifecycle regressions use controlled threads, events and fake process/SDK calls; they require no actual Android/iOS device or SDK.
