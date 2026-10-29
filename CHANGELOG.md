@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Aesthetics scoring no longer silently selects a provider/model or overrides environment values with config defaults. Incomplete configuration is explicitly skipped; local endpoints can omit authentication.
+
 ### Added
 - QuickCheck for deployed Web URLs: dual-viewport evidence, ten quality submetrics, runtime/content checks and a local review UI.
 - Real anonymized QuickCheck report examples and capability documentation in both READMEs.

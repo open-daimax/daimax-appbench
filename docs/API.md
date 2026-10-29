@@ -229,9 +229,9 @@ models:
     name: ""          # Model name (env: MIDSCENE_MODEL_NAME)
     family: ""        # Model family identifier (env: MIDSCENE_MODEL_FAMILY)
   aesthetics:
-    api_key: ""       # Aesthetics VL model key (env: DASHSCOPE_API_KEY)
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    name: "qwen-vl-max"   # (env: AESTHETICS_MODEL)
+    api_key: ""       # Optional; env AESTHETICS_API_KEY (legacy DASHSCOPE_API_KEY)
+    base_url: ""      # Explicit endpoint / AESTHETICS_BASE_URL; no provider default
+    name: ""          # Explicit model name / AESTHETICS_MODEL; no model default
     family: ""
 ```
 

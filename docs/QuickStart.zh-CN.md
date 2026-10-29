@@ -58,9 +58,9 @@ cp evalapp.yaml.example evalapp.yaml
 | `models.e2e` | `api_key` | E2E 视觉模型 API Key（环境变量 `MIDSCENE_MODEL_API_KEY`） |
 | `models.e2e` | `base_url` | OpenAI 兼容协议地址（环境变量 `MIDSCENE_MODEL_BASE_URL`） |
 | `models.e2e` | `name` | 模型名称，如 `gpt-4o`（环境变量 `MIDSCENE_MODEL_NAME`） |
-| `models.aesthetics` | `api_key` | 美观度 VL 模型 API Key（环境变量 `DASHSCOPE_API_KEY`） |
-| `models.aesthetics` | `base_url` | 模型端点（默认 DashScope） |
-| `models.aesthetics` | `name` | 模型名称（默认 `qwen-vl-max`） |
+| `models.aesthetics` | `api_key` | 美观度密钥：显式值优先，其次 `AESTHETICS_API_KEY`，兼容 `DASHSCOPE_API_KEY` |
+| `models.aesthetics` | `base_url` | 模型端点：显式值优先，其次 `AESTHETICS_BASE_URL`；无默认服务商 |
+| `models.aesthetics` | `name` | 视觉模型名：显式值优先，其次 `AESTHETICS_MODEL`；无默认模型 |
 | `ai_ui_test` | `timeout` | E2E 测试超时秒数（默认 300） |
 | `ai_ui_test` | `replan_limit` | 单条用例最大重规划次数（默认 20） |
 | `build_app` | `timeout` | 构建超时秒数（默认 1800） |
@@ -75,6 +75,8 @@ cp evalapp.yaml.example evalapp.yaml
 1. `evalapp.yaml` 中的显式配置
 2. 环境变量
 3. 内置默认值（定义在 `evalapp/config.py`）
+
+美观度评分必须明确指定端点与模型名（YAML 或环境变量），否则记录 warning 并跳过，不发送截图或生成0分。显式配置的本地接口可不提供密钥，此时不发送 Authorization 头。API Key 和 URL 中的凭据不会写入新增的配置日志。
 
 ### 最小配置
 

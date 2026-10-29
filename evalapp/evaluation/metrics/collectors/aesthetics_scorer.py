@@ -48,6 +48,14 @@ class ModelConfig:
     name: str = ""
 
 
+def validate_model_config(config: ModelConfig) -> None:
+    """Reject missing routing fields before encoding images or retrying requests."""
+    missing = [name for name in ("base_url", "name")
+               if not getattr(config, name, "").strip()]
+    if missing:
+        raise ValueError("Missing aesthetics model configuration: " + ", ".join(missing))
+
+
 def score_frames(
     frames: list[Path],
     app_category: str,
@@ -64,8 +72,11 @@ def score_frames(
         ScoringResult 评分结果
 
     Raises:
+        ValueError: Missing model endpoint or name.
         RuntimeError: 所有重试均失败
     """
+    validate_model_config(model_config)
+
     # 构造 messages
     system_prompt = build_system_prompt(app_category)
 
@@ -135,11 +146,13 @@ def _call_api(messages: list[dict], config: ModelConfig) -> tuple[str, dict]:
     Returns:
         (模型返回的文本内容, usage 字典)
     """
+    validate_model_config(config)
     url = f"{config.base_url.rstrip('/')}/chat/completions"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {config.api_key}",
     }
+    if config.api_key:
+        headers["Authorization"] = f"Bearer {config.api_key}"
     payload = {
         "model": config.name,
         "messages": messages,
