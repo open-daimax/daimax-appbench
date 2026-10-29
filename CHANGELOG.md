@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- DevicePool now closes admission and wakes waiters safely, isolates slow teardown from state readers, rejects stale/duplicate leases, and cleans partial startup/failed clones without stopping reused devices.
 - Aesthetics scoring no longer silently selects a provider/model or overrides environment values with config defaults. Incomplete configuration is explicitly skipped; local endpoints can omit authentication.
 
 ### Added

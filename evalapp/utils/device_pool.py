@@ -11,7 +11,7 @@ import os
 import subprocess
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from typing import Dict, List, Set
 
 from .device import _ios_simulator_priority
@@ -47,118 +47,141 @@ class DeviceSlot:
 # ---------------------------------------------------------------------------
 
 
-class DevicePool:
-    """Thread-safe pool that manages a fixed number of device slots.
+@dataclass
+class _DeviceInventory:
+    """Private initialization or detached cleanup state, owned by one lifecycle call."""
 
-    The *max_devices* value is clamped to ``[1, MAX_DEVICES_LIMIT]`` so that
-    callers can safely pass configuration values without extra validation.
-    The actual device count is ``min(max_devices, MAX_DEVICES_LIMIT)``.
+    available: list[DeviceSlot] = field(default_factory=list)
+    android_processes: dict[int, subprocess.Popen] = field(default_factory=dict)
+    ios_booted: set[str] = field(default_factory=set)
+    ios_cloned: set[str] = field(default_factory=set)
+
+
+class DevicePool:
+    """Manage device leases with serialized initialization and shutdown.
+
+    The state condition protects admission and bookkeeping; no SDK/subprocess I/O
+    holds that lock. Initialization publishes an inventory atomically. Shutdown
+    rejects new leases, wakes waiters, drains release cleanups and detaches owned
+    resources before best-effort teardown. Calls must return the exact lease from
+    acquire(); stale, foreign and duplicate releases are ignored.
     """
 
     def __init__(self, platform: str, max_devices: int = 4) -> None:
         self.platform = platform.lower()
         self._max_devices = max(1, min(max_devices, MAX_DEVICES_LIMIT))
-
-        # Slot containers
         self._available: List[DeviceSlot] = []
-        self._in_use: Set[str] = set()  # device_id set
-
-        # Thread safety
+        self._in_use: Dict[str, DeviceSlot] = {}
+        self._releasing: Dict[str, DeviceSlot] = {}
         self._lock = threading.Lock()
         self._condition = threading.Condition(self._lock)
-
-        # Bookkeeping for cleanup
-        self._android_processes: Dict[int, subprocess.Popen] = {}  # port -> Popen
-        self._ios_booted_by_pool: Set[str] = set()  # UDIDs booted by us
-        self._ios_cloned_by_pool: Set[str] = set()  # UDIDs created via clone
-
-        self._initialized = False
-
-    # -- public API ----------------------------------------------------------
+        self._lifecycle_lock = threading.Lock()
+        self._android_processes: Dict[int, subprocess.Popen] = {}
+        self._ios_booted_by_pool: Set[str] = set()
+        self._ios_cloned_by_pool: Set[str] = set()
+        self._state = "new"
+        self._generation = 0
 
     def initialize(self) -> None:
-        """Start all devices and populate the pool.
+        """Initialize once, or reopen after a completed shutdown.
 
-        Must be called once before :meth:`acquire`.  Idempotent — calling
-        it again is a no-op.
+        Lifecycle calls are serialized. Device discovery/boot runs in a private
+        inventory and does not block state readers. Partial startup is cleaned
+        before its original exception is propagated; no partial slots are leased.
         """
-        with self._lock:
-            if self._initialized:
-                return
-            if self.platform == "android":
-                self._init_android()
-            elif self.platform == "ios":
-                self._init_ios()
-            else:
-                raise ValueError(f"Unsupported platform: {self.platform}")
-            self._initialized = True
-            logger.info(
-                "DevicePool initialized: platform=%s, slots=%d",
-                self.platform,
-                len(self._available),
-            )
+        with self._lifecycle_lock:
+            with self._condition:
+                if self._state == "ready":
+                    return
+                if self._state == "closing":
+                    raise RuntimeError("DevicePool shutdown incomplete; call shutdown() first")
+                self._state = "initializing"
+                self._generation += 1
+            inventory = _DeviceInventory()
+            try:
+                if self.platform == "android":
+                    self._init_android(inventory)
+                elif self.platform == "ios":
+                    self._init_ios(inventory)
+                else:
+                    raise ValueError(f"Unsupported platform: {self.platform}")
+            except BaseException:
+                try:
+                    self._cleanup_inventory(inventory)
+                finally:
+                    with self._condition:
+                        self._state = "closed"
+                        self._condition.notify_all()
+                raise
+            with self._condition:
+                self._available = inventory.available
+                self._android_processes = inventory.android_processes
+                self._ios_booted_by_pool = inventory.ios_booted
+                self._ios_cloned_by_pool = inventory.ios_cloned
+                self._state = "ready"
+                self._condition.notify_all()
+                logger.info("DevicePool initialized: platform=%s, slots=%d",
+                            self.platform, len(self._available))
 
     def total_slots(self) -> int:
-        """返回当前池里以初始化的设备总数（包含在用与可用）。
-
-        安全加锁读取内部容器。调用者可用于判断设备初始化后的实际可用设备数，
-        仅在初始化完成、任何 acquire 发生之前调用时严格等于初始可用设备数。
-        """
-        with self._lock:
+        """Return ready capacity, including leased/releasing slots, or zero when closed."""
+        with self._condition:
+            if self._state != "ready":
+                return 0
             return len(self._available) + len(self._in_use)
 
-    def acquire(self, timeout: int = 300) -> DeviceSlot:
-        """Block until a device slot is available or *timeout* expires.
+    def acquire(self, timeout: float = 300) -> DeviceSlot:
+        """Wait for a lease; raise RuntimeError if this generation closes.
 
-        Raises:
-            TimeoutError: If no device becomes available within *timeout* seconds.
-            RuntimeError: If the pool has not been initialized.
+        TimeoutError means a ready pool had no available slot before the deadline.
+        A caller waiting across shutdown cannot acquire from a subsequent restart.
         """
-        if not self._initialized:
-            raise RuntimeError("DevicePool not initialized — call initialize() first")
-
         deadline = time.monotonic() + timeout
         with self._condition:
+            generation = self._generation
             while True:
-                # Try to grab a slot
+                if self._state != "ready" or self._generation != generation:
+                    raise RuntimeError("DevicePool is not initialized or has shut down")
                 if self._available:
-                    slot = self._available.pop(0)
-                    self._in_use.add(slot.device_id)
+                    # New identity for each lease prevents an old/duplicate return
+                    # from releasing the same device after another worker borrows it.
+                    slot = replace(self._available.pop(0))
+                    self._in_use[slot.device_id] = slot
                     logger.debug("Acquired device: %s", slot.device_id)
                     return slot
-
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     raise TimeoutError(
                         f"No device available within {timeout}s "
-                        f"(in_use={len(self._in_use)}, "
-                        f"available={len(self._available)})"
+                        f"(in_use={len(self._in_use)}, available={len(self._available)})"
                     )
                 self._condition.wait(timeout=remaining)
 
     def release(self, slot: DeviceSlot) -> None:
-        """Return a device slot to the pool.
+        """Clean one current lease outside the state lock, then return it if ready.
 
-        Before re-adding the slot to the available list, perform a
-        best-effort cleanup to kill any lingering test app processes so
-        residual state does not leak into the next test. Cleanup
-        failures are logged as warnings and never block release.
+        Duplicate/foreign/old leases do not run cleanup commands. Shutdown waits
+        for already-started release cleanups before stopping owned devices. A
+        lease returned after closing starts is discarded, never reintroduced.
         """
-        # 最小化清理：在锁外执行，避免垃圾收集型命令占用锁。
+        with self._condition:
+            if (self._state != "ready" or self._in_use.get(slot.device_id) is not slot
+                    or slot.device_id in self._releasing):
+                return
+            self._releasing[slot.device_id] = slot
         try:
             self._cleanup_slot(slot)
-        except Exception as exc:  # 所有清理异常都不能阻塞归还
-            logger.warning(
-                "Device cleanup failed for %s before release: %s",
-                slot.device_id, exc,
-            )
-
-        with self._condition:
-            if slot.device_id in self._in_use:
-                self._in_use.discard(slot.device_id)
-                self._available.append(slot)
-                logger.debug("Released device: %s", slot.device_id)
-                self._condition.notify()
+        except Exception as exc:
+            logger.warning("Device cleanup failed for %s before release: %s", slot.device_id, exc)
+        finally:
+            with self._condition:
+                if self._releasing.get(slot.device_id) is slot:
+                    self._releasing.pop(slot.device_id)
+                if self._in_use.get(slot.device_id) is slot:
+                    self._in_use.pop(slot.device_id)
+                    if self._state == "ready":
+                        self._available.append(slot)
+                self._condition.notify_all()
 
     def _cleanup_slot(self, slot: DeviceSlot) -> None:
         """在设备归还前的最小化状态清理。
@@ -203,28 +226,53 @@ class DevicePool:
                 pass
 
     def shutdown(self) -> None:
-        """Shut down all devices managed by this pool.
+        """Close admission and best-effort stop resources created/booted by this pool.
 
-        Android: kill emulator processes via ``adb emu kill``.
-        iOS: shut down simulators booted by the pool; delete cloned ones.
+        Concurrent calls are idempotent and wait for the first teardown. Waiting
+        acquirers fail promptly. Already-running release cleanup is drained, but
+        borrowed evaluations are not gracefully drained: callers should join their
+        workers first. Slow teardown does not hold the state lock. OS/SDK failures
+        are logged; force-killing the process cannot guarantee external cleanup.
         """
-        with self._lock:
-            if not self._initialized:
-                return
-
-            if self.platform == "android":
-                self._shutdown_android()
-            elif self.platform == "ios":
-                self._shutdown_ios()
-
-            self._available.clear()
-            self._in_use.clear()
-            self._initialized = False
+        with self._lifecycle_lock:
+            with self._condition:
+                if self._state in {"new", "closed"}:
+                    return
+                self._state = "closing"
+                self._generation += 1
+                self._condition.notify_all()
+                while self._releasing:
+                    self._condition.wait()
+                inventory = _DeviceInventory(
+                    self._available, self._android_processes,
+                    self._ios_booted_by_pool, self._ios_cloned_by_pool,
+                )
+                self._available = []
+                self._in_use.clear()
+                self._android_processes = {}
+                self._ios_booted_by_pool = set()
+                self._ios_cloned_by_pool = set()
+            try:
+                self._cleanup_inventory(inventory)
+            finally:
+                with self._condition:
+                    self._state = "closed"
+                    self._condition.notify_all()
             logger.info("DevicePool shut down: platform=%s", self.platform)
+
+    def _cleanup_inventory(self, inventory: _DeviceInventory) -> None:
+        """Tear down a detached inventory without accessing shared resource maps."""
+        try:
+            if self.platform == "android":
+                self._shutdown_android(inventory.android_processes)
+            elif self.platform == "ios":
+                self._shutdown_ios(inventory.ios_booted, inventory.ios_cloned)
+        except Exception as exc:
+            logger.warning("DevicePool best-effort cleanup failed: %s", exc)
 
     # -- Android internals ---------------------------------------------------
 
-    def _init_android(self) -> None:
+    def _init_android(self, inventory: _DeviceInventory) -> None:
         """Populate the pool with Android emulators.
 
         Strategy:
@@ -246,10 +294,10 @@ class DevicePool:
         online_ports = self._list_online_android_emulator_ports(adb_path)
         online_avd_names: set[str] = set()
         for port in online_ports:
-            if len(self._available) >= self._max_devices:
+            if len(inventory.available) >= self._max_devices:
                 break
             device_id = f"emulator-{port}"
-            self._available.append(
+            inventory.available.append(
                 DeviceSlot(device_id=device_id, platform="android", port=port)
             )
             # Detect which AVD this emulator is using so we don't try to launch
@@ -259,7 +307,7 @@ class DevicePool:
                 online_avd_names.add(avd)
             logger.info("Reusing online Android emulator: %s (avd=%s)", device_id, avd or "unknown")
 
-        remaining = self._max_devices - len(self._available)
+        remaining = self._max_devices - len(inventory.available)
         if remaining <= 0:
             return
 
@@ -284,10 +332,10 @@ class DevicePool:
 
         avds = [line.strip() for line in (result.stdout or "").strip().split("\n") if line.strip()]
         if not avds:
-            if self._available:
+            if inventory.available:
                 logger.warning(
                     "No AVDs available; using %d already-online emulator(s) only",
-                    len(self._available),
+                    len(inventory.available),
                 )
                 return
             raise RuntimeError(
@@ -314,7 +362,7 @@ class DevicePool:
             logger.info(
                 "Already have %d online emulator(s) which matches available AVD count (%d); "
                 "no additional launch needed",
-                len(self._available), len(available_avds),
+                len(inventory.available), len(available_avds),
             )
             return
 
@@ -322,7 +370,7 @@ class DevicePool:
 
         # 3) Launch additional emulators on free ports.
         # Each new emulator uses a distinct AVD to avoid "already running" conflict.
-        used_ports = set(online_ports) | {slot.port for slot in self._available}
+        used_ports = set(online_ports) | {slot.port for slot in inventory.available}
         new_ports: list[int] = []
         for i in range(remaining):
             avd_to_use = available_avds[i % len(available_avds)]
@@ -337,16 +385,16 @@ class DevicePool:
             logger.info("Starting emulator on port %d (avd=%s): %s", port, avd_to_use, cmd)
             try:
                 proc = run_command_async(cmd)
-                self._android_processes[port] = proc
+                inventory.android_processes[port] = proc
                 new_ports.append(port)
             except Exception as e:  # noqa: BLE001
                 logger.error("Failed to start emulator on port %d: %s", port, e)
 
         if not new_ports:
-            if self._available:
+            if inventory.available:
                 logger.warning(
                     "All new emulator launches failed; falling back to %d online emulator(s)",
-                    len(self._available),
+                    len(inventory.available),
                 )
                 return
             raise RuntimeError(
@@ -368,7 +416,7 @@ class DevicePool:
                     booted = False
                     logger.error("Boot wait raised on %s: %s", device_id, e)
                 if booted:
-                    self._available.append(
+                    inventory.available.append(
                         DeviceSlot(device_id=device_id, platform="android", port=port)
                     )
                 else:
@@ -376,11 +424,12 @@ class DevicePool:
                         "Emulator on port %d did not boot within timeout; skipping",
                         port,
                     )
-                    proc = self._android_processes.pop(port, None)
-                    if proc and proc.poll() is None:
-                        proc.terminate()
+                    proc = inventory.android_processes.get(port)
+                    if proc is not None:
+                        self._shutdown_android({port: proc})
+                        inventory.android_processes.pop(port, None)
 
-        if not self._available:
+        if not inventory.available:
             raise RuntimeError(
                 f"All {len(new_ports)} Android emulator(s) failed to boot within timeout. "
                 "Check emulator logs and AVD configuration."
@@ -472,33 +521,36 @@ class DevicePool:
     
         return False
 
-    def _shutdown_android(self) -> None:
-        """Kill all emulator instances managed by this pool."""
-        adb_path = get_adb_path()
-        for port, proc in list(self._android_processes.items()):
+    def _shutdown_android(self, processes: dict[int, subprocess.Popen]) -> None:
+        """Stop only owned emulator processes; isolate failures and reap exits."""
+        try:
+            adb_path = get_adb_path() if processes else None
+        except Exception as exc:
+            adb_path = None
+            logger.warning("adb unavailable during cleanup; using process handles: %s", exc)
+        for port, proc in list(processes.items()):
             device_id = f"emulator-{port}"
-            logger.info("Shutting down %s", device_id)
-            try:
-                subprocess.run(
-                    [adb_path, "-s", device_id, "emu", "kill"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-            except Exception as e:
-                logger.warning("adb emu kill failed for %s: %s", device_id, e)
-            # Fallback: terminate the Popen process
-            if proc.poll() is None:
+            if adb_path:
                 try:
-                    proc.terminate()
-                    proc.wait(timeout=10)
-                except Exception:
-                    proc.kill()
-        self._android_processes.clear()
+                    subprocess.run([adb_path, "-s", device_id, "emu", "kill"],
+                                   capture_output=True, text=True, timeout=30)
+                except Exception as exc:
+                    logger.warning("adb emu kill failed for %s: %s", device_id, exc)
+            try:
+                if proc.poll() is None:
+                    try:
+                        proc.terminate()
+                        proc.wait(timeout=10)
+                    except Exception:
+                        proc.kill()
+                        proc.wait(timeout=10)
+            except Exception as exc:
+                logger.warning("Process cleanup failed for %s: %s", device_id, exc)
+        processes.clear()
 
     # -- iOS internals -------------------------------------------------------
 
-    def _init_ios(self) -> None:
+    def _init_ios(self, inventory: _DeviceInventory) -> None:
         """Boot *n* iOS simulators, cloning if necessary."""
         # 1. Query all available iPhone simulators
         try:
@@ -546,7 +598,7 @@ class DevicePool:
         for name, udid in booted:
             if needed <= 0:
                 break
-            self._available.append(
+            inventory.available.append(
                 DeviceSlot(device_id=udid, platform="ios", port=None)
             )
             logger.info("Using pre-booted simulator: %s (%s)", name, udid)
@@ -557,8 +609,8 @@ class DevicePool:
             if needed <= 0:
                 break
             if self._boot_ios_simulator(udid, name):
-                self._ios_booted_by_pool.add(udid)
-                self._available.append(
+                inventory.ios_booted.add(udid)
+                inventory.available.append(
                     DeviceSlot(device_id=udid, platform="ios", port=None)
                 )
                 needed -= 1
@@ -570,10 +622,12 @@ class DevicePool:
             for idx in range(needed):
                 clone_name = f"{source_name}-pool-{idx}"
                 clone_udid = self._clone_ios_simulator(source_udid, clone_name)
-                if clone_udid and self._boot_ios_simulator(clone_udid, clone_name):
-                    self._ios_cloned_by_pool.add(clone_udid)
-                    self._ios_booted_by_pool.add(clone_udid)
-                    self._available.append(
+                if clone_udid:
+                    inventory.ios_cloned.add(clone_udid)
+                    if not self._boot_ios_simulator(clone_udid, clone_name):
+                        continue
+                    inventory.ios_booted.add(clone_udid)
+                    inventory.available.append(
                         DeviceSlot(device_id=clone_udid, platform="ios", port=None)
                     )
         elif needed > 0 and shut_down:
@@ -582,10 +636,12 @@ class DevicePool:
             for idx in range(needed):
                 clone_name = f"{source_name}-pool-{idx}"
                 clone_udid = self._clone_ios_simulator(source_udid, clone_name)
-                if clone_udid and self._boot_ios_simulator(clone_udid, clone_name):
-                    self._ios_cloned_by_pool.add(clone_udid)
-                    self._ios_booted_by_pool.add(clone_udid)
-                    self._available.append(
+                if clone_udid:
+                    inventory.ios_cloned.add(clone_udid)
+                    if not self._boot_ios_simulator(clone_udid, clone_name):
+                        continue
+                    inventory.ios_booted.add(clone_udid)
+                    inventory.available.append(
                         DeviceSlot(device_id=clone_udid, platform="ios", port=None)
                     )
 
@@ -631,9 +687,9 @@ class DevicePool:
             logger.warning("Exception cloning simulator: %s", e)
         return None
 
-    def _shutdown_ios(self) -> None:
+    def _shutdown_ios(self, booted: set[str], cloned: set[str]) -> None:
         """Shut down simulators booted by the pool and delete cloned ones."""
-        for udid in list(self._ios_booted_by_pool):
+        for udid in list(booted):
             logger.info("Shutting down simulator: %s", udid)
             try:
                 subprocess.run(
@@ -645,7 +701,7 @@ class DevicePool:
             except Exception as e:
                 logger.warning("Failed to shutdown simulator %s: %s", udid, e)
 
-        for udid in list(self._ios_cloned_by_pool):
+        for udid in list(cloned):
             logger.info("Deleting cloned simulator: %s", udid)
             try:
                 subprocess.run(
@@ -657,5 +713,5 @@ class DevicePool:
             except Exception as e:
                 logger.warning("Failed to delete simulator %s: %s", udid, e)
 
-        self._ios_booted_by_pool.clear()
-        self._ios_cloned_by_pool.clear()
+        booted.clear()
+        cloned.clear()
