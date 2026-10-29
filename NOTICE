@@ -75,3 +75,13 @@ https://github.com/ijl/orjson
 TypeScript - TypeScript language
 Copyright (c) Microsoft Corporation
 https://github.com/microsoft/TypeScript
+
+===============================================================
+QuickCheck standalone synchronization
+===============================================================
+The evalapp.quickcheck engine and report-ui/src/quickcheck UI were
+synchronized from daimax-appbench-quickcheck under Apache-2.0.
+Source revision and exported file hashes: docs/quickcheck-sync.json.
+Framework adapters and public documentation are maintained in this repository.
+The supplied pony.png UI asset has no separate provenance recorded; verify
+redistribution rights or replace it before publishing the QuickCheck addition.

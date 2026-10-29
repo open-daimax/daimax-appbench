@@ -166,7 +166,7 @@ def _print_run_summary(run) -> None:
     "output_dir",
     type=click.Path(path_type=Path),
     default=None,
-    help="评测结果输出目录（artifact 模式下默认 ./eval_output）",
+    help="评测结果输出目录（artifact 模式下默认 workspace_root/evaluations）",
 )
 @click.pass_context
 def evaluate_cmd(
@@ -204,7 +204,7 @@ def evaluate_cmd(
             console.print("[red]artifact 模式必须指定 --sample-id 或 --sample-ids[/red]")
             return
 
-        output = output_dir or Path("./eval_output")
+        output = output_dir or config.artifact_workspace_path
         output.mkdir(parents=True, exist_ok=True)
         workspace = output
 

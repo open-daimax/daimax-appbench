@@ -60,3 +60,10 @@ show-address
 
 # 控制台（后端核心 + 前端 + 部署脚本）已迁至独立仓库，
 # 本仓只保留评测能力，不再有 studio/ 与 deploy/ 目录
+
+# Local secrets and first-screen assessment artifacts
+.env
+.env.*
+!.env.example
+/quickcheck_output/
+# Legacy QuickCheck path remains ignored; new defaults use workspace_root/quickcheck.

@@ -119,6 +119,7 @@ class ModelsConfig(BaseModel):
     automatically (see Config._fill_models_from_legacy).
     """
 
+    quickcheck: ModelEndpointConfig = Field(default_factory=ModelEndpointConfig)
     e2e: ModelEndpointConfig = Field(default_factory=ModelEndpointConfig)
     aesthetics: ModelEndpointConfig = Field(default_factory=ModelEndpointConfig)
 
@@ -241,6 +242,7 @@ class Config(BaseModel):
     generator: GeneratorConfig = Field(default_factory=GeneratorConfig)
     claude: ClaudeConfig = Field(default_factory=ClaudeConfig)
     models: ModelsConfig = Field(default_factory=ModelsConfig)
+    quickcheck: dict = Field(default_factory=dict)
     ai_ui_test: AIUITestConfig = Field(default_factory=AIUITestConfig)
     build_app: BuildAppConfig = Field(default_factory=BuildAppConfig)
     install_app: InstallAppConfig = Field(default_factory=InstallAppConfig)
@@ -335,6 +337,16 @@ class Config(BaseModel):
     def eval_workspace_path(self) -> Path:
         """Root path for evaluation output (used by workspace_manager)."""
         return Path(self.workspace_root).expanduser()
+
+    @property
+    def quickcheck_workspace_path(self) -> Path:
+        """Default first-screen workspace, separate from full evaluations."""
+        return self.eval_workspace_path / "quickcheck"
+
+    @property
+    def artifact_workspace_path(self) -> Path:
+        """Default workspace for direct artifact evaluations."""
+        return self.eval_workspace_path / "evaluations"
 
     @property
     def claude_workspace_root_path(self) -> Path:

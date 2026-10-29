@@ -41,3 +41,17 @@ jobs:
         with:
           name: coverage-report
           path: coverage.xml
+
+  quickcheck-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install QuickCheck dependencies
+        run: pip install -e ".[dev,quickcheck]"
+      - name: Install Chromium and Linux dependencies
+        run: python -m playwright install --with-deps chromium
+      - name: Run local browser smoke test (no model calls)
+        run: QUICKCHECK_RUN_BROWSER_TESTS=1 pytest -q tests/test_quickcheck_browser_smoke.py

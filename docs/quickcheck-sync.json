@@ -1,0 +1,193 @@
+{
+  "files": {
+    "evalapp/quickcheck/__init__.py": {
+      "sha256": "49f5c8c53b25e732cf36936f118778245549e70d4df1dcf50da64820f232afb5",
+      "source": "src/appbench_quickcheck/__init__.py",
+      "source_sha256": "49f5c8c53b25e732cf36936f118778245549e70d4df1dcf50da64820f232afb5"
+    },
+    "evalapp/quickcheck/assessment.py": {
+      "sha256": "197b3c964c694aa38059718e0b603aaf5885b74df1c91cc1fd3f243d2b143d3f",
+      "source": "src/appbench_quickcheck/assessment.py",
+      "source_sha256": "197b3c964c694aa38059718e0b603aaf5885b74df1c91cc1fd3f243d2b143d3f"
+    },
+    "evalapp/quickcheck/attribution.py": {
+      "sha256": "52962368ef442796c4390e867a75a958c41e09d00c49428f955e9d6efb5c22d4",
+      "source": "src/appbench_quickcheck/attribution.py",
+      "source_sha256": "52962368ef442796c4390e867a75a958c41e09d00c49428f955e9d6efb5c22d4"
+    },
+    "evalapp/quickcheck/browser.py": {
+      "sha256": "40b1c5abdcb705ec9067608d6b919c3a98de2017e44134d447705fe604ac97ba",
+      "source": "src/appbench_quickcheck/browser.py",
+      "source_sha256": "40b1c5abdcb705ec9067608d6b919c3a98de2017e44134d447705fe604ac97ba"
+    },
+    "evalapp/quickcheck/cli.py": {
+      "sha256": "8c05e58f4ddd5b6c26c51f7a7f441007a2069c5a5fc76990466a03fcd85ce84a",
+      "source": "src/appbench_quickcheck/cli.py",
+      "source_sha256": "8c05e58f4ddd5b6c26c51f7a7f441007a2069c5a5fc76990466a03fcd85ce84a"
+    },
+    "evalapp/quickcheck/collector.py": {
+      "sha256": "c8ddfc5477cf2f27672d42d94983d15211dec4f32f2cee66acb50e3ab2174a95",
+      "source": "src/appbench_quickcheck/collector.py",
+      "source_sha256": "c8ddfc5477cf2f27672d42d94983d15211dec4f32f2cee66acb50e3ab2174a95"
+    },
+    "evalapp/quickcheck/completion.py": {
+      "sha256": "d7a726f71209b8b85a997f88ea69d5b2c4726e6faa74e69ba118979870ffd0fd",
+      "source": "src/appbench_quickcheck/completion.py",
+      "source_sha256": "d7a726f71209b8b85a997f88ea69d5b2c4726e6faa74e69ba118979870ffd0fd"
+    },
+    "evalapp/quickcheck/config.py": {
+      "sha256": "dafc8ce944f42a8d71803d5dfd8e97faa7f19a95ce1a0c5b22c366adaaed4164",
+      "source": "src/appbench_quickcheck/config.py",
+      "source_sha256": "dafc8ce944f42a8d71803d5dfd8e97faa7f19a95ce1a0c5b22c366adaaed4164"
+    },
+    "evalapp/quickcheck/frames.py": {
+      "sha256": "2c1f34a3ec549aeab6386d8c7bada5ae2ecb91ad7cb3ee4512388044a71536ad",
+      "source": "src/appbench_quickcheck/frames.py",
+      "source_sha256": "2c1f34a3ec549aeab6386d8c7bada5ae2ecb91ad7cb3ee4512388044a71536ad"
+    },
+    "evalapp/quickcheck/harness.py": {
+      "sha256": "9e1047a110de80f3e713f9d1db060886e2d34ed127a449c3eab23892bc2c85fe",
+      "source": "src/appbench_quickcheck/harness.py",
+      "source_sha256": "9e1047a110de80f3e713f9d1db060886e2d34ed127a449c3eab23892bc2c85fe"
+    },
+    "evalapp/quickcheck/judge.py": {
+      "sha256": "0ae0a1ff55e4e8a8c02106e282cf923b9956c179bf698abd1d6ed67533387325",
+      "source": "src/appbench_quickcheck/judge.py",
+      "source_sha256": "0ae0a1ff55e4e8a8c02106e282cf923b9956c179bf698abd1d6ed67533387325"
+    },
+    "evalapp/quickcheck/model_settings.py": {
+      "sha256": "b90da30d8112257fd9999557df1691935f1f8a9327d684b9145ce053dd8d052a",
+      "source": "src/appbench_quickcheck/model_settings.py",
+      "source_sha256": "b90da30d8112257fd9999557df1691935f1f8a9327d684b9145ce053dd8d052a"
+    },
+    "evalapp/quickcheck/orchestrator.py": {
+      "sha256": "80781bf03f08d8da7c5eabcd0efd664488ed85aaea94cd3f63a5b136dc0c7003",
+      "source": "src/appbench_quickcheck/orchestrator.py",
+      "source_sha256": "80781bf03f08d8da7c5eabcd0efd664488ed85aaea94cd3f63a5b136dc0c7003"
+    },
+    "evalapp/quickcheck/paths.py": {
+      "sha256": "c76303c86a1d06f617f5e4b9545f849873c0d7d8d91efecf27ca4e6f1073f3dc",
+      "source": "src/appbench_quickcheck/paths.py",
+      "source_sha256": "c76303c86a1d06f617f5e4b9545f849873c0d7d8d91efecf27ca4e6f1073f3dc"
+    },
+    "evalapp/quickcheck/policy.py": {
+      "sha256": "15bf21e87ab5aa1a4ed5a8044088672b74315471a8d83f0c54b0789741b07bf1",
+      "source": "src/appbench_quickcheck/policy.py",
+      "source_sha256": "15bf21e87ab5aa1a4ed5a8044088672b74315471a8d83f0c54b0789741b07bf1"
+    },
+    "evalapp/quickcheck/replay.py": {
+      "sha256": "8fc5162a4ccf372878eccf6ffd159f5116a2cc4b1e6c2d582ddc4127e3a287db",
+      "source": "src/appbench_quickcheck/replay.py",
+      "source_sha256": "8fc5162a4ccf372878eccf6ffd159f5116a2cc4b1e6c2d582ddc4127e3a287db"
+    },
+    "evalapp/quickcheck/repository.py": {
+      "sha256": "516cbd878108af13907fc15971eb40879481aa72ecc3da5778452692d7e6f254",
+      "source": "src/appbench_quickcheck/repository.py",
+      "source_sha256": "516cbd878108af13907fc15971eb40879481aa72ecc3da5778452692d7e6f254"
+    },
+    "evalapp/quickcheck/sampling.py": {
+      "sha256": "1f83e35732663151f6721bda776a47886fe70c4f0175eada440052453158516b",
+      "source": "src/appbench_quickcheck/sampling.py",
+      "source_sha256": "1f83e35732663151f6721bda776a47886fe70c4f0175eada440052453158516b"
+    },
+    "evalapp/quickcheck/score_worker.py": {
+      "sha256": "faeeea81518b9613b167e40f9de5286bd227628187967b4e2a4501539789913d",
+      "source": "src/appbench_quickcheck/score_worker.py",
+      "source_sha256": "faeeea81518b9613b167e40f9de5286bd227628187967b4e2a4501539789913d"
+    },
+    "evalapp/quickcheck/scoring_config.py": {
+      "sha256": "e60495c5a08a941bed504ab525debcfc22f7b26ef667514279b4ab22a6d7fb28",
+      "source": "src/appbench_quickcheck/scoring_config.py",
+      "source_sha256": "e60495c5a08a941bed504ab525debcfc22f7b26ef667514279b4ab22a6d7fb28"
+    },
+    "evalapp/quickcheck/static/quickcheck.html": {
+      "sha256": "1d2791efaf3ead67aadc5caaf627eb39c9d60f0f06b6ee8d36acd3c915d05bce",
+      "source": "src/appbench_quickcheck/static/quickcheck.html",
+      "source_sha256": "1d2791efaf3ead67aadc5caaf627eb39c9d60f0f06b6ee8d36acd3c915d05bce"
+    },
+    "evalapp/quickcheck/storage.py": {
+      "sha256": "f07eedf0f655e49714947b9c0d6cac99b24bd4e5e75231c9110452cf3da17e48",
+      "source": "src/appbench_quickcheck/storage.py",
+      "source_sha256": "f07eedf0f655e49714947b9c0d6cac99b24bd4e5e75231c9110452cf3da17e48"
+    },
+    "evalapp/quickcheck/web.py": {
+      "sha256": "1d657d1efac9cf5a848ff2d2d3285b95e56db2a619548bb2f052e481965a3029",
+      "source": "src/appbench_quickcheck/web.py",
+      "source_sha256": "b0356bae710a70cea31d15e594ea0b47c354dc7f2a86cba53200d0a5752cbd14"
+    },
+    "report-ui/src/quickcheck/assets/pony.png": {
+      "sha256": "0ac10ae606742012629c759d235feac24b1450b746663daab778f8ea5a8151a1",
+      "source": "ui/src/assets/pony.png",
+      "source_sha256": "0ac10ae606742012629c759d235feac24b1450b746663daab778f8ea5a8151a1"
+    },
+    "report-ui/src/quickcheck/main.jsx": {
+      "sha256": "281229f932db2fa3e6cb056b92c59297862284c73ca614762cfead01711fefa4",
+      "source": "ui/src/main.jsx",
+      "source_sha256": "281229f932db2fa3e6cb056b92c59297862284c73ca614762cfead01711fefa4"
+    },
+    "report-ui/src/quickcheck/style.css": {
+      "sha256": "2587992ef0bebfba9c24bfe7a8a8d6f6df5a1928b9d7841ffe69b880bd5aea04",
+      "source": "ui/src/style.css",
+      "source_sha256": "2587992ef0bebfba9c24bfe7a8a8d6f6df5a1928b9d7841ffe69b880bd5aea04"
+    },
+    "tests/test_quickcheck_browser_smoke.py": {
+      "sha256": "2c830e73b9e9c05040f7cc95edd5b7abc023cbb6d797840c4cdee0eefec42917",
+      "source": "tests/test_browser_smoke.py",
+      "source_sha256": "d56162ac84d8c7344753bf5fdbef43c2db4036244adad70430cd27df32ff318c"
+    },
+    "tests/test_quickcheck_cases.py": {
+      "sha256": "c6b2fba9649128cc0d24e9a675fee8eb985b1d6765dd476459b5061fe00094c8",
+      "source": "tests/test_quickcheck_cases.py",
+      "source_sha256": "10f6bd9ddbf9810764ed1c934b12dab5100beb24ad4a6a5a3ec4a2d93d854b88"
+    },
+    "tests/test_quickcheck_completion.py": {
+      "sha256": "0fd58015b6d3b08cf426f3c1ce813adbbf78bfb00ba34868dd2b9e94df46ddd0",
+      "source": "tests/test_quickcheck_completion.py",
+      "source_sha256": "7e3e7490cd97c9b53c9d94a35da2ef6dd31b0c03a3536050ebdcd8dcb04e83e8"
+    },
+    "tests/test_quickcheck_configuration.py": {
+      "sha256": "23083d8144f6c26385aedc9c8a29055f350c0463eb0177d6acbe8f2e6d0ccec3",
+      "source": "tests/test_quickcheck_configuration.py",
+      "source_sha256": "391e0b0ba204cd159494c14db731e5edf79291f427b5740170cda567e8f88ff7"
+    },
+    "tests/test_quickcheck_harness.py": {
+      "sha256": "a49b315677d645b981d60840f93a453cac6f2516e3427ef9c9dedb3d624740c6",
+      "source": "tests/test_quickcheck_harness.py",
+      "source_sha256": "a1329130df62f6e652727e17e498d6abc6b9562b8e7e69de1d896b5925e53577"
+    },
+    "tests/test_quickcheck_model_settings.py": {
+      "sha256": "8f0be6b037e922e7bd34dd20ae117aafe8ef827d8a9a21a4e9120457b3cc02e9",
+      "source": "tests/test_quickcheck_model_settings.py",
+      "source_sha256": "bcc9890b919a749930b4485e65e05af5d4333de1015a660fce645ec67c84bbf2"
+    },
+    "tests/test_quickcheck_protocol_transport.py": {
+      "sha256": "25217be403537258459dd4fe3aeff7740ed06b99246680759e3cf03d3227c73a",
+      "source": "tests/test_quickcheck_protocol_transport.py",
+      "source_sha256": "cdbdc11096c0a12f6f66693a50da95ecf0b71c28ec3b4f40543fb06fc9d48081"
+    },
+    "tests/test_quickcheck_readiness.py": {
+      "sha256": "c0245573c3c14a383ef56f3a3af5a002233647501ebd7548878839bca77f0168",
+      "source": "tests/test_quickcheck_readiness.py",
+      "source_sha256": "a31bfbd641f6e626104667545bc2644dc521b958b55edba699a0aa77e52a5581"
+    },
+    "tests/test_quickcheck_scoring.py": {
+      "sha256": "4eaaf3dd362c4e2a4f6147de464c6fc945836bb881fbe58126cb8fa238988f6b",
+      "source": "tests/test_quickcheck_scoring.py",
+      "source_sha256": "60e917da4b6b90034a1ffa1c9872879a498c8f4a52f8c8094fd6c62ac020495d"
+    },
+    "tests/test_quickcheck_sharing.py": {
+      "sha256": "8196ea10ce4beb6157746d6e80ef8bfee0753ee6918e0d2023a98df843e28417",
+      "source": "tests/test_quickcheck_sharing.py",
+      "source_sha256": "b12990f4f3f6af42a3c21433b54f4dc531aaa5a1d0d0af99b979638633544361"
+    },
+    "tests/test_quickcheck_standalone.py": {
+      "sha256": "04ea4afa1ab1139be559aa2b253b927740c4791c13c91d5a092476201e08a964",
+      "source": "tests/test_standalone.py",
+      "source_sha256": "a86918145014d8e0cae0ccf601515fc7e73fc40ab381921bd25b99eedfb48f27"
+    }
+  },
+  "namespace": "evalapp.quickcheck",
+  "schema_version": 1,
+  "source_package": "daimax-appbench-quickcheck",
+  "source_revision": "c807b59ee2bb59a02ce56fa106c5d9fc0ab829b1"
+}

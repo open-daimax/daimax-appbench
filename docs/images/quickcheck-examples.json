@@ -1,0 +1,77 @@
+{
+  "note": "Actual archived evaluations; aliases only. Same model and rubric; independent runs, not speed guarantees.",
+  "examples": [
+    {
+      "sample": "low",
+      "display_name": "示例 A · 较低分",
+      "evaluation_id": "qc_11cabd3b0c79445ba3d5839ff5a74cc3",
+      "model": "qwen3.8-flash",
+      "rules": "hierarchical-v8.1",
+      "score": 48.0,
+      "groups": {
+        "visual": 45.0,
+        "information": 60.0,
+        "adaptation": 40.0,
+        "operation": 100.0,
+        "compliance": 100
+      },
+      "duration_ms": 30275,
+      "result_sha256": "9940c7a8aac4df9edf73890cb725d68cade90c212d8812f60705f2ad3b021a5b",
+      "screenshot": "quickcheck-low.png",
+      "anonymized_fields": [
+        "name",
+        "projectId",
+        "url"
+      ],
+      "score_modified": false
+    },
+    {
+      "sample": "medium",
+      "display_name": "示例 B · 中等分",
+      "evaluation_id": "qc_f6ba913903f548708e84f1ed89e8f4b3",
+      "model": "qwen3.8-flash",
+      "rules": "hierarchical-v8.1",
+      "score": 62.6,
+      "groups": {
+        "visual": 59.0,
+        "information": 70.0,
+        "adaptation": 60.0,
+        "operation": 100.0,
+        "compliance": 100
+      },
+      "duration_ms": 31326,
+      "result_sha256": "dccccdc6fb24f33ce17e59214bff8fcb95ca190f4bfde08f78557ea6f2a3e4e6",
+      "screenshot": "quickcheck-medium.png",
+      "anonymized_fields": [
+        "name",
+        "projectId",
+        "url"
+      ],
+      "score_modified": false
+    },
+    {
+      "sample": "higher",
+      "display_name": "示例 C · 相对较高分",
+      "evaluation_id": "qc_cbb0ace4825349fda8e5174eb8669e8c",
+      "model": "qwen3.8-flash",
+      "rules": "hierarchical-v8.1",
+      "score": 72.2,
+      "groups": {
+        "visual": 75.5,
+        "information": 70.0,
+        "adaptation": 70.0,
+        "operation": 100.0,
+        "compliance": 100
+      },
+      "duration_ms": 32944,
+      "result_sha256": "4b7e026e790dd87921a1a8947579cab5926b5e4fbea5135e41f8a59a37d259a4",
+      "screenshot": "quickcheck-higher.png",
+      "anonymized_fields": [
+        "name",
+        "projectId",
+        "url"
+      ],
+      "score_modified": false
+    }
+  ]
+}
