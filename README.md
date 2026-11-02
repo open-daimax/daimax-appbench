@@ -28,6 +28,18 @@ English | [中文](README.zh-CN.md)
 
 ---
 
+## Unified evaluation console
+
+Run QuickCheck and full evaluation from one local, open-source UI:
+
+```bash
+evalapp --config evalapp.yaml studio --port 8766
+```
+
+![AppBench Studio](docs/images/studio-overview.png)
+
+Open `http://127.0.0.1:8766` to choose an evaluation workflow, select benchmark samples, and review task logs, history and reports. Full evaluation accepts URLs, source projects, APKs, iOS apps and existing workspaces. The prebuilt UI ships with the package; Node.js and internal FastApp services are not required. See the [Studio guide](docs/Studio.md) for setup and model configuration.
+
 ## What is daimax-appbench?
 
 **daimax-appbench** is an open-source benchmark platform for AI-generated applications, with two complementary evaluation paths:
