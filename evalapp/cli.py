@@ -60,6 +60,9 @@ from .commands.quickcheck import quickcheck_cmd, quickcheck_ui_cmd
 main.add_command(quickcheck_cmd)
 main.add_command(quickcheck_ui_cmd)
 
+from .commands.studio import studio_cmd
+main.add_command(studio_cmd)
+
 # 第三方插件命令（如生成仓提供的 generate / design-samples / run）：
 # 通过 entry point 组 "evalapp.commands" 自动发现并注册。
 try:
