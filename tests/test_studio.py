@@ -40,7 +40,7 @@ def request(server, path, body=None, headers=None):
 
 
 def test_pages_and_shared_history(server):
-    assert request(server, '/')[0] == 503  # UI is delivered by the next PR
+    assert b'AppBench Studio' in request(server, '/')[1]
     assert request(server, '/quickcheck.html')[0] == 200
     assert request(server, '/api/cases')[0] == 200
     status, body = request(server, '/api/studio/samples')

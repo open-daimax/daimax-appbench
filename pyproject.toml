@@ -48,6 +48,7 @@ exclude = ["results*"]
 # 报告前端单文件模板（本仓 report-ui/ 构建产物，CLI 生成 report.html 时注入数据）
 "evalapp.evaluation.results.reporting" = ["templates/*.html"]
 "evalapp.quickcheck" = ["static/*.html"]
+"evalapp.studio" = ["static/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
