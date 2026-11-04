@@ -6,3 +6,6 @@ recursive-include report-ui *.json *.js *.jsx *.css *.png *.html
 prune report-ui/node_modules
 prune report-ui/dist
 global-exclude *.py[cod] .DS_Store
+
+include docs/Studio.md scripts/start-studio.sh
+include docs/images/studio-overview.png

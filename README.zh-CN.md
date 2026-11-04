@@ -28,6 +28,18 @@
 
 ---
 
+## 统一评测控制台
+
+使用同一个开源 UI 运行快速评测与完整评测：
+
+```bash
+evalapp --config evalapp.yaml studio --port 8766
+```
+
+![AppBench Studio](docs/images/studio-overview.png)
+
+打开 `http://127.0.0.1:8766`，选择快评或完整评测，查看任务日志、记录与报告。完整评测支持 URL、源码、APK、iOS App 和已有工作区。预构建页面随包分发，无需 Node.js，无 FastApp 内部服务依赖。安装与模型配置见 [Studio 使用说明](docs/Studio.md)。
+
 ## 什么是 daimax-appbench？
 
 **daimax-appbench** 是衡量 AI 生成应用质量的开源评测平台，提供两种互补的评测方式：
