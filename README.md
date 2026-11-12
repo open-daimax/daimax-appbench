@@ -332,7 +332,7 @@ evalapp evaluate --samples-dir ./dataset/V2 --sample-ids TeaCeremony,CoffeeRoast
 **1. Install** — requires Python ≥ 3.10:
 
 ```bash
-git clone https://github.com/open-daima/daimax-appbench.git
+git clone https://github.com/open-daimax/daimax-appbench.git
 cd daimax-appbench
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
